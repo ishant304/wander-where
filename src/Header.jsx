@@ -16,7 +16,6 @@ function Header() {
       viewHam(true)
     else
       viewHam(false)
-    console.log(ham)
   }
 
   return (

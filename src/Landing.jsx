@@ -2,13 +2,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Typewriter from "./Typewriter"
 import image from './assets/image.png'
 import { faArrowRight, faChevronRight } from "@fortawesome/free-solid-svg-icons"
-import { useState } from "react"
+import { useContext, useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router"
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons"
+import { SearchContext } from "./SearchContext"
 
 function Landing() {
 
-  const [selectedPlace, setSelectedPlace] = useState(null);
+  const { selectedPlace, setSelectedPlace } = useContext(SearchContext)
   const [suggestions, setSuggestions] = useState([]);
   const [input, setInput] = useState('')
   const [error, setError] = useState(false)
@@ -20,13 +21,17 @@ function Landing() {
 
     setInput(e.target.value)
 
-    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(value + ' India')}&limit=3&lang=en`;
+    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(value + ' India')}&limit=5&lang=en`;
     let resp = await fetch(url)
     let data = await resp.json();
 
     console.log(data)
 
-    setSuggestions(data.features);
+    let filteredData = data.features.filter(
+      unit => unit?.properties?.countrycode === "IN"
+    );
+
+    setSuggestions(filteredData.slice(0, 3));
 
     setSelectedPlace(null);
     setError(false)
@@ -71,7 +76,7 @@ function Landing() {
                 peer-focus:-translate-y-3 peer-focus:scale-[0.8] peer-focus:-translate-x-7`}>
                 Where are you planning to go?
               </label>
-              {input.length > 2 && (
+              {input.length > 0 && (
                 <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {suggestions.map((item, index) => (
                     <li

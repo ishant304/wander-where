@@ -7,3 +7,29 @@
     @apply h-full w-full;
   }
 }
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+
+::-webkit-scrollbar-track {
+  background: #ffffff; 
+  border-radius: 10px;
+}
+
+
+::-webkit-scrollbar-thumb {
+  background: #63b3ac; 
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #0f766e; /* teal-700 */
+}
