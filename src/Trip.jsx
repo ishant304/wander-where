@@ -293,7 +293,8 @@ function Trip() {
           )}
         </div>
         <div className="w-4/5 h-full">
-          <MapContainer className="h-full w-full -z-10"
+          <MapContainer className="h-full w-full"
+            style={{ zIndex: 0 }}
             center={[28.6139, 77.2090]}
             zoom={10}
             scrollWheelZoom={true}
