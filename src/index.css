@@ -29,7 +29,31 @@
   border-radius: 10px;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #0f766e; /* teal-700 */
+  background: #0f766e; 
+}
+
+.leaflet-tooltip::before {
+  display: none;
+}
+
+.leaflet-tooltip {
+    background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+
+  color: #ffffff !important; 
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow:
+    -2px -2px 0 #149b90,
+     2px -2px 0 #149b90,
+    -2px  2px 0 #149b90,
+     2px  2px 0 #149b90,
+     0px  2px 0 #149b90,
+     2px  0px 0 #149b90,
+    -2px  0px 0 #149b90,
+     0px -2px 0 #149b90;
 }
