@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import Typewriter from "./Typewriter"
 import image from './assets/image.png'
 import { faArrowRight, faChevronRight } from "@fortawesome/free-solid-svg-icons"
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import { Link, useNavigate } from "react-router"
 import { faCircleXmark } from "@fortawesome/free-regular-svg-icons"
 import { SearchContext } from "./SearchContext"
@@ -14,28 +14,44 @@ function Landing() {
   const [input, setInput] = useState('')
   const [error, setError] = useState(false)
   const navigate = useNavigate();
+  const isSelectingRef = useRef(false)
 
   async function handleInput(e) {
-
-    let value = e.target.value;
-
     setInput(e.target.value)
-
-    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(value + ' India')}&limit=5&lang=en`;
-    let resp = await fetch(url)
-    let data = await resp.json();
-
-    console.log(data)
-
-    let filteredData = data.features.filter(
-      unit => unit?.properties?.countrycode === "IN"
-    );
-
-    setSuggestions(filteredData.slice(0, 3));
-
-    setSelectedPlace(null);
-    setError(false)
   }
+
+  useEffect(() => {
+
+    if(isSelectingRef.current){
+      isSelectingRef.current = false;
+      return;
+    }
+
+    if (!input.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(
+        input + " India"
+      )}&limit=5&lang=en`;
+
+      const resp = await fetch(url);
+      const data = await resp.json();
+
+      const filteredData = data.features.filter(
+        unit => unit?.properties?.countrycode === "IN"
+      );
+
+      setSuggestions(filteredData.slice(0, 3));
+      setSelectedPlace(null);
+      setError(false);
+    }, 300); 
+
+    return () => clearTimeout(timer);
+
+  }, [input])
 
   function handelClick(e) {
     if (!selectedPlace) {
@@ -85,6 +101,7 @@ function Landing() {
                         setInput(item.properties.name);
                         setSelectedPlace(item);
                         setSuggestions([]);
+                        isSelectingRef.current = true;
                       }}
                       className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
                     >

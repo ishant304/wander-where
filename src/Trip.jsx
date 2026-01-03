@@ -3,8 +3,10 @@ import { SearchContext } from "./SearchContext"
 import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMap } from "@fortawesome/free-regular-svg-icons";
-import { faBus, faCar, faLocationDot, faMapPin, faMotorcycle, faPlane, faRoute, faShip, faTrain } from "@fortawesome/free-solid-svg-icons";
+import { faBed, faBus, faCar, faCrown, faDrumstickBite, faHandHoldingDollar, faHotel, faLocationDot, faMapPin, faMoneyBill1Wave, faMotorcycle, faPiggyBank, faPlane, faRoute, faSeedling, faTaxi, faTrain, faUmbrellaBeach, faUtensils } from "@fortawesome/free-solid-svg-icons";
 import { tealMarkerIcon } from "./utils/mapIcons";
+import { faAirbnb } from "@fortawesome/free-brands-svg-icons";
+import StopsTab from "./StopsTab";
 
 function Trip() {
 
@@ -14,7 +16,7 @@ function Trip() {
   const [activeInput, setActiveInput] = useState(null)
   const [destError, setDestError] = useState(null)
   const [depError, setDepError] = useState(null)
-  const [suggestions, setSuggestions] = useState([])
+  const [suggestions2, setSuggestions2] = useState([])
   const [checkbox, setCheckbox] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const [locations, setLocations] = useState([]);
@@ -23,55 +25,100 @@ function Trip() {
     startLocation: '',
     endLocation: '',
     travelers: 1,
-    tripType: '',
+    tripType: 'budget',
     duration: 3,
-    transportation: '',
+    transportation: 'car',
     accommodation: 'hotel',
     mealPreference: 'all'
   });
+  const [suggestedSightseeing, setSuggestedSightseeing] = useState([]);
+  const [suggestedPlaces, setSuggestedPlaces] = useState([]);
   const startFirstRender = useRef(true);
   const endFirstRender = useRef(true);
+  const firstRender = useRef(false);
+  const routeModel = useRef("initial")
+  const destInputFirstChange = useRef(false);
 
 
-  async function handleDepartureInput(e) {
+  function handleDepartureInput(e) {
 
     const value = e.target.value;
     setDepartureInput(value)
 
-    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(value + ' India')}&limit=5&lang=en`;
-
-    let rawData = await fetch(url)
-    let data = await rawData.json()
-
-    const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN");
-
-    setSuggestions(filteredData.splice(0, 3))
-
-    setDepError(false)
-    setActiveInput("departure")
-
   }
+
+  useEffect(() => {
+
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+
+    if (!departureInput.trim() || departureInput === "Current location") {
+      setSuggestions2([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(departureInput + ' India')}&limit=5&lang=en`;
+
+      let rawData = await fetch(url)
+      let data = await rawData.json()
+
+      const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN");
+
+      setSuggestions2(filteredData.splice(0, 3))
+
+      setDepError(false)
+      setActiveInput("departure")
+
+    }, 300)
+
+    return () => clearTimeout(timer)
+
+
+  }, [departureInput])
 
   async function handleDestinationInput(e) {
 
     const value = e.target.value;
     setDestinationInput(value)
 
-
-    const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(value + ' India')}&limit=5&lang=en`;
-
-    let rawData = await fetch(url)
-    let data = await rawData.json()
-
-    const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN"
-    );
-
-    setSuggestions(filteredData.splice(0, 3))
-
-    setDestError(false)
-    setActiveInput("destination")
-
   }
+
+  useEffect(() => {
+
+    if (firstRender.current || destInputFirstChange.current) {
+      firstRender.current = false;
+      destInputFirstChange.current = false;
+      return;
+    }
+
+    if (!destinationInput.trim()) {
+      setSuggestions2([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(destinationInput + ' India')}&limit=5&lang=en`;
+
+      let rawData = await fetch(url)
+      let data = await rawData.json()
+
+      const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN"
+      );
+
+      setSuggestions2(filteredData.splice(0, 3))
+
+      setDestError(false)
+      setActiveInput("destination")
+
+    }, 300);
+
+    return () => clearTimeout(timer)
+
+  }, [destinationInput])
 
   function getCurrentLocation(e) {
 
@@ -125,7 +172,9 @@ function Trip() {
   useEffect(() => {
     if (selectedPlace) {
       setTripDetails({ ...tripDetails, endLocation: selectedPlace.properties.name })
+      destInputFirstChange.current = true;
       setDestinationInput(selectedPlace.properties.name)
+
     }
   }, [])
 
@@ -144,7 +193,8 @@ function Trip() {
         {
           id: "start",
           name: tripDetails.startLocation,
-          coords: coords
+          coords: coords,
+          day: 1
         }, ...prev.filter(loc => loc.id != "start")
       ])
     }
@@ -156,7 +206,8 @@ function Trip() {
         {
           id: "start",
           name: tripDetails.startLocation,
-          coords: coords
+          coords: coords,
+          day: 1
         }, ...prev.filter(loc => loc.id != "start")
       ])
     }
@@ -193,7 +244,8 @@ function Trip() {
         {
           id: "end",
           name: tripDetails.endLocation,
-          coords: coords
+          coords: coords,
+          day: tripDetails.duration
         }
       ])
 
@@ -219,44 +271,19 @@ function Trip() {
 
   useEffect(() => {
 
-    if (locations.length < 2) {
+    const start = locations.find(l => l.id === "start")
+    const end = locations.find(l => l.id === "end")
+
+    if (!start || !end) {
       setPolylineCoords([])
       return;
     }
 
-    async function fetchRoute() {
+    async function fetchRoute(points) {
 
       setPolylineCoords([])
 
-      // let coordinates = locations.map(loc => [
-      //   loc.coords[1], loc.coords[0]
-      // ])
-
-      // const url = "https://api.openrouteservice.org/v2/directions/driving-car/geojson"
-      // const key = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjhiMTRlYmYxMGYzZjQ4OWRiZWQ5YjZjMGY5MDVjZDk5IiwiaCI6Im11cm11cjY0In0="
-
-      // const rawData = await fetch(url, {
-      //   method: "POST",
-      //   headers: {
-      //     "Authorization": key,
-      //     "Content-Type": "application/json"
-      //   },
-      //   body: JSON.stringify({
-      //     coordinates,
-      //     radiuses: Array(coordinates.length).fill(3000),
-      //   })
-      // })
-
-      // const data = await rawData.json()
-
-      // console.log(data);
-
-      // const coords = data.features[0].geometry.coordinates.map(
-      //   ([lng, lat]) => [lat, lng]
-      // )
-
-
-      const coordinates = locations
+      const coordinates = points
         .map(loc => `${loc.coords[1]},${loc.coords[0]}`)
         .join(";");
 
@@ -279,61 +306,71 @@ function Trip() {
         ([lng, lat]) => [lat, lng]
       );
 
-    console.log(bestRoute);
-    
+      console.log(bestRoute);
+
 
       setPolylineCoords(coords);
 
     }
 
-    fetchRoute()
+    if(routeModel.current == "initial"){
+      fetchRoute([start, end])
+    }
+
+    if(routeModel.current == "editing"){
+      return;
+    }
+
+    if(routeModel.current == "final"){
+      fetchRoute(locations)
+    }
 
   }, [locations])
 
 
   function pickBestDrivableRoute(routes) {
-  if (!routes || routes.length === 0) return null;
-  if (routes.length === 1) return routes[0];
+    if (!routes || routes.length === 0) return null;
+    if (routes.length === 1) return routes[0];
 
-  let bestRoute = routes[0];
-  let minBends = Infinity;
+    let bestRoute = routes[0];
+    let minBends = Infinity;
 
-  routes.forEach(route => {
-    let bendCount = 0;
+    routes.forEach(route => {
+      let bendCount = 0;
 
-    route.legs?.forEach(leg => {
-      leg.steps?.forEach(step => {
-        const modifier = step.maneuver?.modifier;
+      route.legs?.forEach(leg => {
+        leg.steps?.forEach(step => {
+          const modifier = step.maneuver?.modifier;
 
-        // Count every bend as 1 (ignore severity)
-        if (
-          modifier === "left" ||
-          modifier === "right" ||
-          modifier === "slight left" ||
-          modifier === "slight right" ||
-          modifier === "sharp left" ||
-          modifier === "sharp right" ||
-          modifier === "uturn"
-        ) {
-          bendCount++;
-        }
+          if (
+            modifier === "left" ||
+            modifier === "right" ||
+            modifier === "slight left" ||
+            modifier === "slight right" ||
+            modifier === "sharp left" ||
+            modifier === "sharp right" ||
+            modifier === "uturn"
+          ) {
+            bendCount++;
+          }
+        });
       });
+
+      if (bendCount < minBends) {
+        minBends = bendCount;
+        bestRoute = route;
+      }
     });
 
-    if (bendCount < minBends) {
-      minBends = bendCount;
-      bestRoute = route;
-    }
-  });
-
-  return bestRoute;
-}
+    return bestRoute;
+  }
 
 
   useEffect(() => {
 
     window.tripDetails = tripDetails
     window.locations = locations
+    window.routeModel = routeModel;
   }, [tripDetails, locations]);
 
   function AutoFlyToBounds({ locations }) {
@@ -367,7 +404,7 @@ function Trip() {
     bus: faBus,
     car: faCar,
     bike: faMotorcycle,
-    cruise: faShip,
+    sharing: faTaxi,
   };
 
   return (
@@ -390,7 +427,7 @@ function Trip() {
             <span className="text-xs mt-1">Itineary</span>
           </button>
         </div>
-        <div className="w-1/5 h-full border border-r-teal-200 overflow-y-auto">
+        <div className="w-3/12 h-full border border-r-teal-200 overflow-y-auto">
 
 
           {activeTab == "overview" && (
@@ -418,10 +455,10 @@ function Trip() {
                       value={departureInput}
                       disabled={activeInput == "destination" || checkbox}
                       onChange={(e) => handleDepartureInput(e)} onBlur={() => {
-                        if (departureInput.length == 0 || suggestions.length == 0) {
+                        if (departureInput.length == 0 || suggestions2.length == 0) {
                           setDepError(false);
                           setActiveInput("");
-                          setSuggestions([])
+                          setSuggestions2([])
                         } else {
                           setDepError(true);
                         }
@@ -431,14 +468,15 @@ function Trip() {
                     {activeInput == "departure" && departureInput.length > 0 && (
                       <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto ">
                         {
-                          suggestions.map((item, index) => (
+                          suggestions2.map((item, index) => (
                             <li
                               key={index}
                               onClick={() => {
                                 setDepartureInput(item.properties.name);
                                 setTripDetails({ ...tripDetails, startLocation: item.properties.name })
-                                setSuggestions([]); setActiveInput("");
-                                setDepError(false)
+                                setSuggestions2([]); setActiveInput("");
+                                setDepError(false);
+                                firstRender.current = true;
                               }}
                               className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
                             >
@@ -475,10 +513,10 @@ function Trip() {
                       value={destinationInput}
                       onChange={(e) => handleDestinationInput(e)}
                       onBlur={() => {
-                        if (destinationInput.length == 0 || suggestions.length == 0) {
+                        if (destinationInput.length == 0 || suggestions2.length == 0) {
                           setDestError(false);
                           setActiveInput("");
-                          setSuggestions([])
+                          setSuggestions2([])
                         } else {
                           setDestError(true);
                         }
@@ -487,16 +525,19 @@ function Trip() {
                     />
                     {activeInput == "destination" && destinationInput.length > 0 && (
                       <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto ">
-                        {suggestions.map((item, index) => (
+                        {suggestions2.map((item, index) => (
                           <li
                             key={index}
                             onClick={() => {
                               setDestinationInput(item.properties.name);
                               setSelectedPlace(item);
                               setTripDetails({ ...tripDetails, endLocation: item.properties.name })
-                              setSuggestions([]);
+                              setSuggestions2([]);
                               setActiveInput("");
                               setDestError(false);
+                              firstRender.current = true;
+                              setSuggestedPlaces([]);
+                              setSuggestedSightseeing([]);
                             }}
                             className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
                           >
@@ -586,14 +627,14 @@ function Trip() {
 
                       Primary Transportation
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
                       {[
+                        { value: 'car', label: 'Car', icon: 'car' },
                         { value: 'flight', label: 'Flight', icon: 'flight' },
                         { value: 'train', label: 'Train', icon: 'train' },
                         { value: 'bus', label: 'Bus', icon: 'bus' },
-                        { value: 'car', label: 'Car', icon: 'car' },
                         { value: 'bike', label: 'Bike', icon: 'bike' },
-                        { value: 'cruise', label: 'Cruise', icon: 'cruise' }
+                        { value: 'sharing', label: 'Sharing', icon: 'sharing' }
                       ].map(transport => (
                         <button
                           key={transport.value}
@@ -621,20 +662,24 @@ function Trip() {
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        { value: 'hotel', label: '🏨 Hotel' },
-                        { value: 'hostel', label: '🏠 Hostel' },
-                        { value: 'resort', label: '🏖️ Resort' },
-                        { value: 'airbnb', label: '🏡 Airbnb' }
-                      ].map(acc => (
+                        { value: 'hotel', label: 'Hotel', icon: faHotel },
+                        { value: 'hostel', label: 'Hostel', icon: faBed },
+                        { value: 'resort', label: 'Resort', icon: faUmbrellaBeach },
+                        { value: 'airbnb', label: 'Air Bnd', icon: faAirbnb }
+                      ].map(type => (
                         <button
-                          key={acc.value}
-                          onClick={() => setTripDetails({ ...tripDetails, accommodation: acc.value })}
-                          className={`p-2 rounded-md text-sm transition-all border ${tripDetails.accommodation === acc.value
-                            ? 'border-teal-600 bg-teal-50 text-teal-700 font-medium'
+                          key={type.value}
+                          onClick={() => setTripDetails({ ...tripDetails, accommodation: type.value })}
+                          className={`p-3 rounded-md text-xs font-medium transition-all border-2 flex flex-col items-center gap-1 ${tripDetails.accommodation === type.value
+                            ? 'border-teal-600 bg-teal-50 text-teal-700'
                             : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                             }`}
                         >
-                          {acc.label}
+                          <FontAwesomeIcon
+                            icon={type.icon}
+                            className="text-lg"
+                          />
+                          {type.label}
                         </button>
                       ))}
                     </div>
@@ -645,21 +690,24 @@ function Trip() {
 
                       Meal Preference
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 xl:grid-cols-3 gap-2">
                       {[
-                        { value: 'all', label: '🍽️ All Meals' },
-                        { value: 'vegetarian', label: '🥗 Vegetarian' },
-                        { value: 'vegan', label: '🌱 Vegan' },
-                        { value: 'halal', label: '🍖 Halal' }
+                        { value: 'all', label: 'All Meals', icon: faUtensils },
+                        { value: 'veg', label: 'Veg', icon: faSeedling },
+                        { value: 'non-veg', label: 'Non-Veg', icon: faDrumstickBite }
                       ].map(meal => (
                         <button
                           key={meal.value}
                           onClick={() => setTripDetails({ ...tripDetails, mealPreference: meal.value })}
-                          className={`p-2 rounded-md text-xs transition-all border ${tripDetails.mealPreference === meal.value
-                            ? 'border-teal-600 bg-teal-50 text-teal-700 font-medium'
+                          className={`p-3 rounded-md text-xs font-medium transition-all border-2 flex flex-col items-center gap-1 ${tripDetails.mealPreference === meal.value
+                            ? 'border-teal-600 bg-teal-50 text-teal-700'
                             : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                             }`}
                         >
+                          <FontAwesomeIcon
+                            icon={meal.icon}
+                            className="text-lg"
+                          />
                           {meal.label}
                         </button>
                       ))}
@@ -673,20 +721,23 @@ function Trip() {
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       {[
-                        { value: 'budget', label: 'Budget', icon: '💰' },
-                        { value: 'affordable', label: 'Affordable', icon: '💵' },
-                        { value: 'luxury', label: 'Luxury', icon: '✨' },
-                        { value: 'ultra-luxury', label: 'Ultra Luxury', icon: '👑' }
+                        { value: 'budget', label: 'Budget', icon: faPiggyBank },
+                        { value: 'affordable', label: 'Affordable', icon: faHandHoldingDollar },
+                        { value: 'luxury', label: 'Luxury', icon: faMoneyBill1Wave },
+                        { value: 'ultra-luxury', label: 'Ultra Luxury', icon: faCrown }
                       ].map(type => (
                         <button
                           key={type.value}
                           onClick={() => setTripDetails({ ...tripDetails, tripType: type.value })}
-                          className={`p-3 rounded-md text-sm font-medium transition-all border-2 ${tripDetails.tripType === type.value
+                          className={`p-3 rounded-md text-xs font-medium transition-all border-2 flex flex-col items-center gap-1 ${tripDetails.tripType === type.value
                             ? 'border-teal-600 bg-teal-50 text-teal-700'
                             : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                             }`}
                         >
-                          <div className="text-lg mb-1">{type.icon}</div>
+                          <FontAwesomeIcon
+                            icon={type.icon}
+                            className="text-lg"
+                          />
                           {type.label}
                         </button>
                       ))}
@@ -700,13 +751,17 @@ function Trip() {
 
 
           {activeTab == "stops" && (
-            <div>This is me</div>
+            <StopsTab tripDetails={tripDetails} setTripDetails={setTripDetails}
+              locations={locations} setLocations={setLocations}
+              suggestedSightseeing={suggestedSightseeing} setSuggestedSightseeing={setSuggestedSightseeing} suggestedPlaces={suggestedPlaces} setSuggestedPlaces={setSuggestedPlaces}
+              routeModel = {routeModel}
+              />
           )}
           {activeTab == "itineary" && (
             <div></div>
           )}
         </div>
-        <div className="w-4/5 h-full">
+        <div className="w-3/4 h-full">
           <MapContainer className="h-full w-full"
             style={{ zIndex: 0 }}
             center={[21.1458, 79.0882]}
