@@ -182,27 +182,6 @@ out body;`
         </div>
         {tripDetails.endLocation && (
           <div>
-            <p className="text-base mb-2 mt-6 text-gray-700">Sightseeing in {tripDetails.endLocation}</p>
-            <div className="flex flex-row gap-4 overflow-x-auto pb-4 whitespace-nowrap">
-              {suggestedSightseeing && suggestedSightseeing.length > 0 && (
-                suggestedSightseeing.map((place, index) => (
-                  <div key={index}>
-                    <div className="w-48 rounded-md border-gray-400 border">
-                      <div className="p-4">
-                        <p className="font-bold text-sm text-gray-700 overflow-hidden text-ellipsis max-w-48 pb-1">{place?.properties?.name_international?.en || place.properties.name}</p>
-                        <p className="text-xs text-gray-500 max-w-48 whitespace-nowrap overflow-hidden text-ellipsis">{place.properties.address_line2}</p>
-                        <p className="text-xs text-gray-500 max-w-48 whitespace-nowrap overflow-hidden text-ellipsis mt-2"><FontAwesomeIcon className="mr-2" icon={faClock} />{place?.properties?.opening_hours || "N/A"}</p>
-                        <button className="w-full py-2 rounded-lg text-xs font-medium bg-teal-400 mt-3">Add to trip</button>
-                      </div>
-                    </div>
-                  </div>
-                )
-                ))}
-            </div>
-          </div>
-        )}
-        {tripDetails.endLocation && (
-          <div>
             <p className="text-base mb-2 mt-6 text-gray-700">Place to visit near Destination</p>
             <div className="flex flex-row gap-4 overflow-x-auto pb-4 whitespace-nowrap">
               {suggestedPlaces && suggestedPlaces.length > 0 && (

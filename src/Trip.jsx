@@ -31,7 +31,6 @@ function Trip() {
     accommodation: 'hotel',
     mealPreference: 'all'
   });
-  const [suggestedSightseeing, setSuggestedSightseeing] = useState([]);
   const [suggestedPlaces, setSuggestedPlaces] = useState([]);
   const startFirstRender = useRef(true);
   const endFirstRender = useRef(true);
@@ -537,7 +536,6 @@ function Trip() {
                               setDestError(false);
                               firstRender.current = true;
                               setSuggestedPlaces([]);
-                              setSuggestedSightseeing([]);
                             }}
                             className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
                           >
@@ -753,7 +751,7 @@ function Trip() {
           {activeTab == "stops" && (
             <StopsTab tripDetails={tripDetails} setTripDetails={setTripDetails}
               locations={locations} setLocations={setLocations}
-              suggestedSightseeing={suggestedSightseeing} setSuggestedSightseeing={setSuggestedSightseeing} suggestedPlaces={suggestedPlaces} setSuggestedPlaces={setSuggestedPlaces}
+              suggestedPlaces={suggestedPlaces} setSuggestedPlaces={setSuggestedPlaces}
               routeModel = {routeModel}
               />
           )}
