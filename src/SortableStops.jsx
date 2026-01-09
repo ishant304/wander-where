@@ -4,7 +4,7 @@ import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import { faGripVertical } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-function SortableStops({ item, isOverlay = false, activeId }) {
+function SortableStops({ item, isOverlay = false, locations, setLocations }) {
 
   if (isOverlay) {
     return (
@@ -21,6 +21,19 @@ function SortableStops({ item, isOverlay = false, activeId }) {
         </div>
       </div>
     );
+  }
+
+  function handleDelete() {
+    
+    if(item.id==="end" || item.id==="start"){
+      return
+    }
+    else{
+      setLocations(prev=>(
+        prev.filter(items => items.id !== item.id)
+      ))
+    }
+
   }
 
   const {
@@ -54,7 +67,7 @@ function SortableStops({ item, isOverlay = false, activeId }) {
                   <FontAwesomeIcon className="absolute top-1" icon={faGripVertical} />
                   <h1 className="text-md text-gray-700 overflow-hidden text-ellipsis max-w-48 pb-1 pl-8">{item.name}</h1>
                 </div>
-                <FontAwesomeIcon className={`absolute right-0 top-1 ${item.id === "end" ? "cursor-not-allowed" : "cursor-pointer"}`} icon={faTrashCan} />
+                <FontAwesomeIcon className={`absolute right-0 top-1 ${item.id === "end" ? "cursor-not-allowed" : "cursor-pointer"}`} icon={faTrashCan} onClick={handleDelete}/>
               </div>
             </div>
 

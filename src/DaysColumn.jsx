@@ -6,7 +6,7 @@ import { faMapPin } from "@fortawesome/free-solid-svg-icons"
 
 
 
-function DaysColumn({ index, locations, activeId }) {
+function DaysColumn({ index, locations, setLocations }) {
 
     const { setNodeRef, isOver } = useDroppable({ id: `day${index + 1}` })
 
@@ -35,12 +35,12 @@ function DaysColumn({ index, locations, activeId }) {
                     : <div className="px-2">
                         <SortableContext
                             items={locations.filter(item => item.day === index + 1).map(item => item.id)}
-                            strategy={verticalListSortingStrategy}
+                            strategy={verticalListSortingStrategy}                    
                         >
                             {locations
                                 .filter(item => item.day === index + 1)
                                 .map(item => (
-                                    <SortableStops key={item.id} item={item} />
+                                    <SortableStops key={item.id} item={item} setLocations={setLocations} locations={locations}/>
                                 ))}
                         </SortableContext>
                     </div>

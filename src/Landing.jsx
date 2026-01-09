@@ -13,6 +13,8 @@ function Landing() {
   const [suggestions, setSuggestions] = useState([]);
   const [input, setInput] = useState('')
   const [error, setError] = useState(false)
+  const [loadingSearch, setLoadingSearch] = useState(false)
+  const [loadingError, setLoadingError] = useState(false)
   const navigate = useNavigate();
   const isSelectingRef = useRef(false)
 
@@ -22,7 +24,7 @@ function Landing() {
 
   useEffect(() => {
 
-    if(isSelectingRef.current){
+    if (isSelectingRef.current) {
       isSelectingRef.current = false;
       return;
     }
@@ -32,22 +34,41 @@ function Landing() {
       return;
     }
 
+    setLoadingSearch(true)
+    setLoadingError(false)
+
+
     const timer = setTimeout(async () => {
-      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(
-        input + " India"
-      )}&limit=5&lang=en`;
 
-      const resp = await fetch(url);
-      const data = await resp.json();
+      try {
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(
+          input + " India"
+        )}&limit=5&lang=en`;
 
-      const filteredData = data.features.filter(
-        unit => unit?.properties?.countrycode === "IN"
-      );
+        const resp = await fetch(url);
 
-      setSuggestions(filteredData.slice(0, 3));
-      setSelectedPlace(null);
-      setError(false);
-    }, 300); 
+        if (!resp.ok) {
+          throw new Error("API_failed")
+        }
+
+        const data = await resp.json();
+
+        const filteredData = data.features.filter(
+          unit => unit?.properties?.countrycode === "IN"
+        );
+
+        setSuggestions(filteredData.slice(0, 3));
+        setSelectedPlace(null);
+        setError(false);
+      }
+      catch (err) {
+        setLoadingError(true)
+      }
+      finally {
+        setLoadingSearch(false)
+      }
+
+    }, 300);
 
     return () => clearTimeout(timer);
 
@@ -94,7 +115,35 @@ function Landing() {
               </label>
               {input.length > 0 && (
                 <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {suggestions.map((item, index) => (
+
+                  {loadingSearch && (
+                    <>
+                      {
+                        Array.from({ length: 3 }, (_, index) => (
+                          <>
+                            <li className="px-4 py-3 flex flex-col gap-2 animate-pulse">
+                              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            </li>
+                          </>
+                        ))
+                      }
+                    </>
+                  )}
+
+                  {!loadingSearch && loadingError && (
+                    <li className="px-4 py-3 text-sm text-gray-500">
+                      Unable to load suggestions. Check your connection.
+                    </li>
+                  )}
+
+                  {!loadingSearch && !loadingError && suggestions.length === 0 && (
+                    <li className="px-4 py-3 text-sm text-gray-500">
+                      No results found
+                    </li>
+                  )}
+
+                  {!loadingSearch && !loadingError && suggestions.map((item, index) => (
                     <li
                       key={index}
                       onClick={() => {
@@ -115,6 +164,7 @@ function Landing() {
                   ))}
                 </ul>
               )}
+
             </div>
             <button className="h-16 w-32 rounded-lg bg-gradient-to-r from-[rgb(94,221,189)]  to-[rgb(27,193,199)]" onClick={(e) => handelClick(e)}>Plan
               <FontAwesomeIcon icon={faChevronRight} />

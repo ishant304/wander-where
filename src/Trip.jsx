@@ -7,6 +7,7 @@ import { faBed, faBus, faCar, faCrown, faDrumstickBite, faHandHoldingDollar, faH
 import { tealMarkerIcon } from "./utils/mapIcons";
 import { faAirbnb } from "@fortawesome/free-brands-svg-icons";
 import StopsTab from "./StopsTab";
+import Itineary from "./Itineary";
 
 function Trip() {
 
@@ -21,6 +22,7 @@ function Trip() {
   const [activeTab, setActiveTab] = useState("overview")
   const [locations, setLocations] = useState([]);
   const [polylineCoords, setPolylineCoords] = useState([])
+  const [route, setRoute] = useState()
   const [tripDetails, setTripDetails] = useState({
     startLocation: '',
     endLocation: '',
@@ -32,10 +34,14 @@ function Trip() {
     mealPreference: 'all'
   });
   const [suggestedPlaces, setSuggestedPlaces] = useState([]);
+  const [routeModel, setRouteModel] = useState("initial")
+  const [departureLoadingSearch, setDepartureLoadingSearch] = useState(false)
+  const [departureLoadingError, setDepartureLoadingError] = useState(false)
+  const [destinationLoadingSearch, setDestinationLoadingSearch] = useState(false)
+  const [destinationLoadingError, setDestinationLoadingError] = useState(false)
   const startFirstRender = useRef(true);
   const endFirstRender = useRef(true);
   const firstRender = useRef(false);
-  const routeModel = useRef("initial")
   const destInputFirstChange = useRef(false);
 
 
@@ -58,19 +64,37 @@ function Trip() {
       return;
     }
 
+    setActiveInput("departure")
+    setDepartureLoadingError(false)
+    setDepartureLoadingSearch(true)
+
     const timer = setTimeout(async () => {
 
-      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(departureInput + ' India')}&limit=5&lang=en`;
+      try {
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(departureInput + ' India')}&limit=5&lang=en`;
 
-      let rawData = await fetch(url)
-      let data = await rawData.json()
+        let rawData = await fetch(url)
 
-      const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN");
+        if (!rawData.ok) {
+          throw new Error("API_failed")
+        }
 
-      setSuggestions2(filteredData.splice(0, 3))
+        let data = await rawData.json()
 
-      setDepError(false)
-      setActiveInput("departure")
+        const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN");
+
+        setSuggestions2(filteredData.splice(0, 3))
+
+        console.log(filteredData)
+
+        setDepError(false)
+      }
+      catch {
+        setDepartureLoadingError(true)
+      }
+      finally {
+        setDepartureLoadingSearch(false)
+      }
 
     }, 300)
 
@@ -99,19 +123,37 @@ function Trip() {
       return;
     }
 
+    setActiveInput("destination")
+    setDestinationLoadingError(false)
+    setDestinationLoadingSearch(true)
+
     const timer = setTimeout(async () => {
-      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(destinationInput + ' India')}&limit=5&lang=en`;
 
-      let rawData = await fetch(url)
-      let data = await rawData.json()
+      try {
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(destinationInput + ' India')}&limit=5&lang=en`;
 
-      const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN"
-      );
+        let rawData = await fetch(url)
 
-      setSuggestions2(filteredData.splice(0, 3))
+        if (!rawData.ok) {
+          throw new Error("API_failed")
+        }
 
-      setDestError(false)
-      setActiveInput("destination")
+        let data = await rawData.json()
+
+        const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN"
+        );
+
+        setSuggestions2(filteredData.splice(0, 3))
+
+        setDestError(false)
+      }
+      catch {
+        setDestinationLoadingError(true)
+      }
+      finally {
+        setDestinationLoadingSearch(false)
+      }
+
 
     }, 300);
 
@@ -262,6 +304,31 @@ function Trip() {
 
   }, [tripDetails.endLocation])
 
+
+  function handleDuration(e) {
+
+    const value = e.target.value
+
+    setLocations(prev =>
+      prev.map(place => {
+        if (place.id === "start") {
+          return { ...place, day: 1 };
+        }
+        if (place.id.startsWith("stop")) {
+          return { ...place, day: Math.floor(1 + value / 2) };
+        }
+        if (place.id === "end") {
+          return { ...place, day: Number(value) };
+        }
+        return place;
+      })
+    );
+
+    setTripDetails({ ...tripDetails, duration: parseInt(value) || 1 })
+
+  }
+
+
   useEffect(() => {
     return () => {
       setSelectedPlace(null);
@@ -301,6 +368,8 @@ function Trip() {
 
       const bestRoute = pickBestDrivableRoute(data.routes);
 
+      setRoute(bestRoute)
+
       const coords = bestRoute.geometry.coordinates.map(
         ([lng, lat]) => [lat, lng]
       );
@@ -312,19 +381,19 @@ function Trip() {
 
     }
 
-    if(routeModel.current == "initial"){
+    if (routeModel == "initial") {
       fetchRoute([start, end])
     }
 
-    if(routeModel.current == "editing"){
+    if (routeModel == "editing") {
       return;
     }
 
-    if(routeModel.current == "final"){
+    if (routeModel == "final") {
       fetchRoute(locations)
     }
 
-  }, [locations])
+  }, [locations, routeModel])
 
 
   function pickBestDrivableRoute(routes) {
@@ -370,7 +439,7 @@ function Trip() {
     window.tripDetails = tripDetails
     window.locations = locations
     window.routeModel = routeModel;
-  }, [tripDetails, locations]);
+  }, [tripDetails, locations, routeModel]);
 
   function AutoFlyToBounds({ locations }) {
     const map = useMap();
@@ -464,18 +533,48 @@ function Trip() {
                       }
                       }
                     />
-                    {activeInput == "departure" && departureInput.length > 0 && (
-                      <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto ">
-                        {
+                    {activeInput === "departure" && departureInput.length > 0 && (
+                      <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+
+                        {departureLoadingSearch &&
+                          Array.from({ length: 3 }).map((_, i) => (
+                            <li
+                              key={i}
+                              className="px-4 py-3 flex flex-col gap-2 animate-pulse"
+                            >
+                              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            </li>
+                          ))
+                        }
+
+                        {!departureLoadingSearch && departureLoadingError && (
+                          <li className="px-4 py-3 text-sm text-gray-500">
+                            Unable to load suggestions. Check your connection.
+                          </li>
+                        )}
+
+                        {!departureLoadingSearch && !departureLoadingError && suggestions2.length === 0 && (
+                          <li className="px-4 py-3 text-sm text-gray-500">
+                            No results found
+                          </li>
+                        )}
+
+                        {!departureLoadingSearch && !departureLoadingError &&
                           suggestions2.map((item, index) => (
                             <li
                               key={index}
                               onClick={() => {
                                 setDepartureInput(item.properties.name);
-                                setTripDetails({ ...tripDetails, startLocation: item.properties.name })
-                                setSuggestions2([]); setActiveInput("");
+                                setTripDetails({
+                                  ...tripDetails,
+                                  startLocation: item.properties.name
+                                });
+                                setSuggestions2([]);
+                                setActiveInput("");
                                 setDepError(false);
                                 firstRender.current = true;
+                                setRouteModel("initial");
                               }}
                               className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
                             >
@@ -490,6 +589,7 @@ function Trip() {
                         }
                       </ul>
                     )}
+
                     <div className="mt-2">
                       <input type="checkbox" id="checkbox" onChange={(e) => getCurrentLocation(e)} value={checkbox} />
                       <label className="items-center ml-2 gap-2 text-sm font-medium text-gray-700" htmlFor="checkbox">Check this to use current location</label>
@@ -522,33 +622,65 @@ function Trip() {
                       }
                       }
                     />
-                    {activeInput == "destination" && destinationInput.length > 0 && (
-                      <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto ">
-                        {suggestions2.map((item, index) => (
-                          <li
-                            key={index}
-                            onClick={() => {
-                              setDestinationInput(item.properties.name);
-                              setSelectedPlace(item);
-                              setTripDetails({ ...tripDetails, endLocation: item.properties.name })
-                              setSuggestions2([]);
-                              setActiveInput("");
-                              setDestError(false);
-                              firstRender.current = true;
-                              setSuggestedPlaces([]);
-                            }}
-                            className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
-                          >
-                            <span className="font-medium text-gray-900">
-                              {item.properties.name}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {(item.properties.state || item.properties.city) + ", India"}
-                            </span>
+                    {activeInput === "destination" && destinationInput.length > 0 && (
+                      <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+
+                        {destinationLoadingSearch &&
+                          Array.from({ length: 3 }).map((_, i) => (
+                            <li
+                              key={i}
+                              className="px-4 py-3 flex flex-col gap-2 animate-pulse"
+                            >
+                              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            </li>
+                          ))
+                        }
+
+                        {!destinationLoadingSearch && destinationLoadingError && (
+                          <li className="px-4 py-3 text-sm text-gray-500">
+                            Unable to load suggestions. Check your connection.
                           </li>
-                        ))}
+                        )}
+
+                        {!destinationLoadingSearch && !destinationLoadingError && suggestions2.length === 0 && (
+                          <li className="px-4 py-3 text-sm text-gray-500">
+                            No results found
+                          </li>
+                        )}
+
+                        {!destinationLoadingSearch && !destinationLoadingError &&
+                          suggestions2.map((item, index) => (
+                            <li
+                              key={index}
+                              onClick={() => {
+                                setDestinationInput(item.properties.name);
+                                setSelectedPlace(item);
+                                setTripDetails({
+                                  ...tripDetails,
+                                  endLocation: item.properties.name
+                                });
+                                setSuggestions2([]);
+                                setActiveInput("");
+                                setDestError(false);
+                                firstRender.current = true;
+                                setSuggestedPlaces([]);
+                                setRouteModel("initial");
+                              }}
+                              className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
+                            >
+                              <span className="font-medium text-gray-900">
+                                {item.properties.name}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {(item.properties.state || item.properties.city) + ", India"}
+                              </span>
+                            </li>
+                          ))
+                        }
                       </ul>
                     )}
+
                   </div>
 
                   <div>
@@ -565,7 +697,7 @@ function Trip() {
                           max="30"
                           className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
                           value={tripDetails.duration}
-                          onChange={(e) => setTripDetails({ ...tripDetails, duration: parseInt(e.target.value) })}
+                          onChange={(e) => handleDuration(e)}
                         />
                         <div className="flex items-center gap-2">
                           <input
@@ -574,7 +706,7 @@ function Trip() {
                             max="365"
                             className="w-16 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm text-center font-semibold"
                             value={tripDetails.duration}
-                            onChange={(e) => setTripDetails({ ...tripDetails, duration: parseInt(e.target.value) || 1 })}
+                            onChange={(e) => handleDuration(e)}
                           />
                           <span className="text-xs text-gray-600 whitespace-nowrap">
                             {tripDetails.duration === 1 ? 'day' : 'days'}
@@ -692,7 +824,7 @@ function Trip() {
                       {[
                         { value: 'all', label: 'All Meals', icon: faUtensils },
                         { value: 'veg', label: 'Veg', icon: faSeedling },
-                        { value: 'non-veg', label: 'Non-Veg', icon: faDrumstickBite }
+                        { value: 'non_veg', label: 'Non-Veg', icon: faDrumstickBite }
                       ].map(meal => (
                         <button
                           key={meal.value}
@@ -722,7 +854,7 @@ function Trip() {
                         { value: 'budget', label: 'Budget', icon: faPiggyBank },
                         { value: 'affordable', label: 'Affordable', icon: faHandHoldingDollar },
                         { value: 'luxury', label: 'Luxury', icon: faMoneyBill1Wave },
-                        { value: 'ultra-luxury', label: 'Ultra Luxury', icon: faCrown }
+                        { value: 'ultra_luxury', label: 'Ultra Luxury', icon: faCrown }
                       ].map(type => (
                         <button
                           key={type.value}
@@ -752,11 +884,14 @@ function Trip() {
             <StopsTab tripDetails={tripDetails} setTripDetails={setTripDetails}
               locations={locations} setLocations={setLocations}
               suggestedPlaces={suggestedPlaces} setSuggestedPlaces={setSuggestedPlaces}
-              routeModel = {routeModel}
-              />
+              routeModel={routeModel}
+              setRouteModel={setRouteModel}
+            />
           )}
           {activeTab == "itineary" && (
-            <div></div>
+            <div>
+              <Itineary tripDetails={tripDetails} locations={locations} route={route} />
+            </div>
           )}
         </div>
         <div className="w-3/4 h-full">
