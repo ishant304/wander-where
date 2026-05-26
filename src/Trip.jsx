@@ -1,13 +1,12 @@
 import { useContext, useEffect, useRef, useState } from "react"
 import { SearchContext } from "./SearchContext"
-import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMap } from "@fortawesome/free-regular-svg-icons";
+import { faCompass, faMap } from "@fortawesome/free-regular-svg-icons";
 import { faBed, faBus, faCar, faCrown, faDrumstickBite, faHandHoldingDollar, faHotel, faLocationDot, faMapPin, faMoneyBill1Wave, faMotorcycle, faPiggyBank, faPlane, faRoute, faSeedling, faTaxi, faTrain, faUmbrellaBeach, faUtensils } from "@fortawesome/free-solid-svg-icons";
-import { tealMarkerIcon } from "./utils/mapIcons";
 import { faAirbnb } from "@fortawesome/free-brands-svg-icons";
 import StopsTab from "./StopsTab";
 import Itineary from "./Itineary";
+import Map from "./Map";
 
 function Trip() {
 
@@ -83,7 +82,7 @@ function Trip() {
 
         const filteredData = data.features.filter(unit => unit?.properties?.countrycode === "IN");
 
-        setSuggestions2(filteredData.splice(0, 3))
+        setSuggestions2(filteredData.slice(0, 3))
 
         console.log(filteredData)
 
@@ -200,14 +199,27 @@ function Trip() {
 
 
   async function geocoding(location) {
-    const rawData = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(location + ",india")}&key=0b37e65606bf435f95a9915069d9e07f`)
+    try {
+      const apiKey = import.meta.env.VITE_OPENCAGE_API_KEY;
+      
+      if (!apiKey) {
+        console.error("OpenCage API key not configured. Please set VITE_OPENCAGE_API_KEY environment variable.");
+        return null;
+      }
 
-    const data = await rawData.json()
+      const rawData = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(location + ",india")}&key=${apiKey}`)
+
+      const data = await rawData.json()
 
     let coords = [Number(data.results[0].geometry.lat), Number(data.results[0].geometry.lng)]
 
     return coords;
 
+      return coords;
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      return null;
+    }
   }
 
   useEffect(() => {
@@ -217,7 +229,7 @@ function Trip() {
       setDestinationInput(selectedPlace.properties.name)
 
     }
-  }, [])
+  }, [selectedPlace, tripDetails])
 
   useEffect(() => {
 
@@ -229,6 +241,12 @@ function Trip() {
     async function updateGeocoding() {
 
       let coords = await geocoding(tripDetails.startLocation)
+
+      if (!coords) {
+        console.error("Failed to get coordinates for:", tripDetails.startLocation);
+        setLocations((prev) => [...prev.filter(loc => loc.id != "start")])
+        return;
+      }
 
       setLocations((prev) => [
         {
@@ -249,7 +267,7 @@ function Trip() {
           name: tripDetails.startLocation,
           coords: coords,
           day: 1
-        }, ...prev.filter(loc => loc.id != "start")
+        }, ...prev.filter(loc => loc.id !== "start")
       ])
     }
 
@@ -257,9 +275,9 @@ function Trip() {
       updateGeolocation()
     }
 
-    else if (tripDetails.startLocation == "") {
+    else if (tripDetails.startLocation === "") {
       setLocations((prev) => [
-        ...prev.filter(loc => loc.id != "start")
+        ...prev.filter(loc => loc.id !== "start")
       ])
     }
 
@@ -281,7 +299,7 @@ function Trip() {
       let coords = await geocoding(tripDetails.endLocation)
 
       setLocations((prev) => [
-        ...prev.filter(loc => loc.id != "end"),
+        ...prev.filter(loc => loc.id !== "end"),
         {
           id: "end",
           name: tripDetails.endLocation,
@@ -292,9 +310,9 @@ function Trip() {
 
     }
 
-    if (tripDetails.endLocation == "") {
+    if (tripDetails.endLocation === "") {
       setLocations((prev) => [
-        ...prev.filter(loc => loc.id != "end")
+        ...prev.filter(loc => loc.id !== "end")
       ])
     }
 
@@ -433,6 +451,24 @@ function Trip() {
     return bestRoute;
   }
 
+  useEffect(() => {
+
+    function handleResize() {
+
+        if(window.innerWidth >= 640 && activeTab === "map"){
+            setActiveTab("overview");
+        }
+
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+        window.removeEventListener("resize", handleResize);
+    }
+
+}, [activeTab]);
+
 
   useEffect(() => {
 
@@ -440,31 +476,6 @@ function Trip() {
     window.locations = locations
     window.routeModel = routeModel;
   }, [tripDetails, locations, routeModel]);
-
-  function AutoFlyToBounds({ locations }) {
-    const map = useMap();
-
-    useEffect(() => {
-      if (!locations || locations.length === 0) return;
-
-      const bounds = L.latLngBounds(
-        locations
-          .map(loc => loc.coords)
-          .filter(c => Array.isArray(c) && c.length === 2)
-      );
-
-      if (!bounds.isValid()) return;
-
-      map.flyToBounds(bounds, {
-        padding: [60, 60],
-        maxZoom: 10,
-        duration: 1.5,
-        easeLinearity: 0.25,
-      });
-    }, [locations, map]);
-
-    return null;
-  }
 
   const transportIcons = {
     flight: faPlane,
@@ -476,29 +487,34 @@ function Trip() {
   };
 
   return (
-    <div>
-      <div className="flex flex-row h-[calc(100vh-121px)] w-screen">
+    <div className="h-[calc(100vh-121px)]">
+      <div className="flex flex-row h-full w-screen">
         <div className="w-[70px] border-r-teal-200 border flex flex-col">
           <button className={`flex flex-col items-center cursor-pointer hover:text-teal-600 text-3xl pt-8
-            ${activeTab == "overview" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("overview")}>
-            <FontAwesomeIcon icon={faMap} />
+            ${activeTab === "overview" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("overview")}>
+            <FontAwesomeIcon className="hidden sm:block" icon={faMap} />
+            <FontAwesomeIcon className="sm:hidden" icon={faCompass} />
             <span className="text-xs mt-1">Overview</span>
           </button>
+          <button className={`sm:hidden flex flex-col items-center cursor-pointer hover:text-teal-600 text-3xl pt-8 ${activeTab === "map" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("map")}>
+            <FontAwesomeIcon icon={faMap} />
+            <span className="text-xs mt-1">Map</span>
+          </button>
           <button className={`flex flex-col items-center cursor-pointer hover:text-teal-600 text-3xl pt-8
-            ${activeTab == "stops" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("stops")}>
+            ${activeTab === "stops" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("stops")}>
             <FontAwesomeIcon icon={faMapPin} />
             <span className="text-xs mt-1">Stops</span>
           </button>
           <button className={`flex flex-col items-center cursor-pointer hover:text-teal-600 text-3xl pt-8
-            ${activeTab == "itineary" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("itineary")}>
+            ${activeTab === "itineary" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("itineary")}>
             <FontAwesomeIcon icon={faRoute} />
             <span className="text-xs mt-1">Itineary</span>
           </button>
         </div>
-        <div className="w-3/12 h-full border border-r-teal-200 overflow-y-auto">
+        <div className="w-full sm:w-3/12 h-full border border-r-teal-200 overflow-y-auto">
 
 
-          {activeTab == "overview" && (
+          {activeTab === "overview" && (
 
             <div>
 
@@ -521,9 +537,9 @@ function Trip() {
                         ${depError ? "border-red-600 focus:border-red-600 focus:ring-2 focus:ring-red-300 ring-2 ring-red-300"
                           : "border-gray-500 focus:border-teal-600 focus:ring-2 focus:ring-teal-200"} `}
                       value={departureInput}
-                      disabled={activeInput == "destination" || checkbox}
+                      disabled={activeInput === "destination" || checkbox}
                       onChange={(e) => handleDepartureInput(e)} onBlur={() => {
-                        if (departureInput.length == 0 || suggestions2.length == 0) {
+                        if (departureInput.length === 0 || suggestions2.length === 0) {
                           setDepError(false);
                           setActiveInput("");
                           setSuggestions2([])
@@ -605,14 +621,14 @@ function Trip() {
                     <input
                       type="text"
                       placeholder="e.g., Goa"
-                      disabled={activeInput == "departure"}
+                      disabled={activeInput === "departure"}
                       className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:outline-none text-sm disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-400 disabled:cursor-not-allowed disabled:opacity-80
                         ${destError ? "border-red-600 focus:border-red-600 focus:ring-2 focus:ring-red-300 ring-2 ring-red-300"
                           : "border-gray-500 focus:border-teal-600 focus:ring-2 focus:ring-teal-200"} `}
                       value={destinationInput}
                       onChange={(e) => handleDestinationInput(e)}
                       onBlur={() => {
-                        if (destinationInput.length == 0 || suggestions2.length == 0) {
+                        if (destinationInput.length === 0 || suggestions2.length === 0) {
                           setDestError(false);
                           setActiveInput("");
                           setSuggestions2([])
@@ -879,8 +895,16 @@ function Trip() {
 
           )}
 
+          {
+            activeTab === "map" && (
+              <div className="sm:hidden w-full h-full">
+                <Map locations={locations} polylineCoords={polylineCoords} />
+              </div>
+            )
+          }
 
-          {activeTab == "stops" && (
+
+          {activeTab === "stops" && (
             <StopsTab tripDetails={tripDetails} setTripDetails={setTripDetails}
               locations={locations} setLocations={setLocations}
               suggestedPlaces={suggestedPlaces} setSuggestedPlaces={setSuggestedPlaces}
@@ -888,38 +912,14 @@ function Trip() {
               setRouteModel={setRouteModel}
             />
           )}
-          {activeTab == "itineary" && (
+          {activeTab === "itineary" && (
             <div>
               <Itineary tripDetails={tripDetails} locations={locations} route={route} />
             </div>
           )}
         </div>
-        <div className="w-3/4 h-full">
-          <MapContainer className="h-full w-full"
-            style={{ zIndex: 0 }}
-            center={[21.1458, 79.0882]}
-            zoom={5}
-            scrollWheelZoom={true}
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="&copy; OpenStreetMap contributors">
-            </TileLayer>
-            {
-              locations.map(loc => (
-                <Marker key={loc.id} position={loc.coords} icon={tealMarkerIcon}>
-                  <Tooltip permanent direction="top" offset={[2, -20]}>{loc.name}</Tooltip>
-                </Marker>
-              ))
-            }
-            <AutoFlyToBounds locations={locations} />
-            {locations.length > 1 && (
-              <Polyline
-                positions={polylineCoords}
-                color="#149b90"
-                weight={5}
-              />
-            )}
-          </MapContainer>
+        <div className="w-3/4 h-full hidden sm:block">
+          <Map locations={locations} polylineCoords={polylineCoords} />
         </div>
       </div>
     </div>
