@@ -1,13 +1,12 @@
 import { useContext, useEffect, useRef, useState } from "react"
 import { SearchContext } from "./SearchContext"
-import { MapContainer, Marker, Polyline, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMap } from "@fortawesome/free-regular-svg-icons";
+import { faCompass, faMap } from "@fortawesome/free-regular-svg-icons";
 import { faBed, faBus, faCar, faCrown, faDrumstickBite, faHandHoldingDollar, faHotel, faLocationDot, faMapPin, faMoneyBill1Wave, faMotorcycle, faPiggyBank, faPlane, faRoute, faSeedling, faTaxi, faTrain, faUmbrellaBeach, faUtensils } from "@fortawesome/free-solid-svg-icons";
-import { tealMarkerIcon } from "./utils/mapIcons";
 import { faAirbnb } from "@fortawesome/free-brands-svg-icons";
 import StopsTab from "./StopsTab";
 import Itineary from "./Itineary";
+import Map from "./Map";
 
 function Trip() {
 
@@ -43,6 +42,7 @@ function Trip() {
   const endFirstRender = useRef(true);
   const firstRender = useRef(false);
   const destInputFirstChange = useRef(false);
+  const routeCache = useRef("");
 
 
   function handleDepartureInput(e) {
@@ -347,37 +347,45 @@ function Trip() {
 
     async function fetchRoute(points) {
 
-      setPolylineCoords([])
+      const cacheKey = JSON.stringify(points.map(l => l.coords))
 
-      const coordinates = points
-        .map(loc => `${loc.coords[1]},${loc.coords[0]}`)
-        .join(";");
-
-      const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson&alternatives=true&steps=true`;
-
-
-      const rawData = await fetch(url);
-      const data = await rawData.json();
-
-      console.log(data);
-
-      if (!data.routes || data.routes.length === 0) {
-        setPolylineCoords([]);
+      if (routeCache.current === cacheKey) {
         return;
       }
 
-      const bestRoute = pickBestDrivableRoute(data.routes);
+      else {
 
-      setRoute(bestRoute)
+        setPolylineCoords([])
 
-      const coords = bestRoute.geometry.coordinates.map(
-        ([lng, lat]) => [lat, lng]
-      );
+        const coordinates = points
+          .map(loc => `${loc.coords[1]},${loc.coords[0]}`)
+          .join(";");
 
-      console.log(bestRoute);
+        const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson&alternatives=true&steps=true`;
 
 
-      setPolylineCoords(coords);
+        const rawData = await fetch(url);
+        const data = await rawData.json();
+
+        if (!data.routes || data.routes.length === 0) {
+          setPolylineCoords([]);
+          return;
+        }
+
+        const bestRoute = pickBestDrivableRoute(data.routes);
+
+        setRoute(bestRoute)
+
+        const coords = bestRoute.geometry.coordinates.map(
+          ([lng, lat]) => [lat, lng]
+        );
+
+
+        setPolylineCoords(coords);
+
+        routeCache.current = JSON.stringify(points.map(l=>l.coords)) 
+
+      }
 
     }
 
@@ -441,31 +449,6 @@ function Trip() {
     window.routeModel = routeModel;
   }, [tripDetails, locations, routeModel]);
 
-  function AutoFlyToBounds({ locations }) {
-    const map = useMap();
-
-    useEffect(() => {
-      if (!locations || locations.length === 0) return;
-
-      const bounds = L.latLngBounds(
-        locations
-          .map(loc => loc.coords)
-          .filter(c => Array.isArray(c) && c.length === 2)
-      );
-
-      if (!bounds.isValid()) return;
-
-      map.flyToBounds(bounds, {
-        padding: [60, 60],
-        maxZoom: 10,
-        duration: 1.5,
-        easeLinearity: 0.25,
-      });
-    }, [locations, map]);
-
-    return null;
-  }
-
   const transportIcons = {
     flight: faPlane,
     train: faTrain,
@@ -481,8 +464,14 @@ function Trip() {
         <div className="w-[70px] border-r-teal-200 border flex flex-col">
           <button className={`flex flex-col items-center cursor-pointer hover:text-teal-600 text-3xl pt-8
             ${activeTab == "overview" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("overview")}>
-            <FontAwesomeIcon icon={faMap} />
+            <FontAwesomeIcon className="hidden sm:block" icon={faMap} />
+            <FontAwesomeIcon className="sm:hidden" icon={faCompass} />
             <span className="text-xs mt-1">Overview</span>
+          </button>
+          <button className={`sm:hidden flex flex-col items-center cursor-pointer hover:text-teal-600 text-3xl pt-8
+            ${activeTab == "map" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("map")}>
+            <FontAwesomeIcon icon={faMap} />
+            <span className="text-xs mt-1">Map</span>
           </button>
           <button className={`flex flex-col items-center cursor-pointer hover:text-teal-600 text-3xl pt-8
             ${activeTab == "stops" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("stops")}>
@@ -495,7 +484,7 @@ function Trip() {
             <span className="text-xs mt-1">Itineary</span>
           </button>
         </div>
-        <div className="w-3/12 h-full border border-r-teal-200 overflow-y-auto">
+        <div className="w-full sm:w-3/12 h-full border border-r-teal-200 overflow-y-auto">
 
 
           {activeTab == "overview" && (
@@ -591,7 +580,7 @@ function Trip() {
                     )}
 
                     <div className="mt-2">
-                      <input type="checkbox" id="checkbox" onChange={(e) => getCurrentLocation(e)} value={checkbox} />
+                      <input type="checkbox" id="checkbox" onChange={(e) => getCurrentLocation(e)} checked={checkbox} />
                       <label className="items-center ml-2 gap-2 text-sm font-medium text-gray-700" htmlFor="checkbox">Check this to use current location</label>
                     </div>
 
@@ -880,6 +869,11 @@ function Trip() {
           )}
 
 
+          <div className={`w-full h-full sm:hidden ${activeTab === "map" ? "block" : "hidden"}`}>
+            <Map locations={locations} polylineCoords={polylineCoords} isActive={activeTab === "map"} />
+          </div>
+
+
           {activeTab == "stops" && (
             <StopsTab tripDetails={tripDetails} setTripDetails={setTripDetails}
               locations={locations} setLocations={setLocations}
@@ -894,32 +888,8 @@ function Trip() {
             </div>
           )}
         </div>
-        <div className="w-3/4 h-full">
-          <MapContainer className="h-full w-full"
-            style={{ zIndex: 0 }}
-            center={[21.1458, 79.0882]}
-            zoom={5}
-            scrollWheelZoom={true}
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="&copy; OpenStreetMap contributors">
-            </TileLayer>
-            {
-              locations.map(loc => (
-                <Marker key={loc.id} position={loc.coords} icon={tealMarkerIcon}>
-                  <Tooltip permanent direction="top" offset={[2, -20]}>{loc.name}</Tooltip>
-                </Marker>
-              ))
-            }
-            <AutoFlyToBounds locations={locations} />
-            {locations.length > 1 && (
-              <Polyline
-                positions={polylineCoords}
-                color="#149b90"
-                weight={5}
-              />
-            )}
-          </MapContainer>
+        <div className="w-3/4 h-full hidden sm:block">
+          <Map locations={locations} polylineCoords={polylineCoords} />
         </div>
       </div>
     </div>

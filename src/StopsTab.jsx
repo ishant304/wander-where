@@ -262,8 +262,8 @@ out body;`
                 ) : loadingSuggestedPlaces ? (
                   <>
                     {
-                      Array.from({ length: 3 }, (_, id) => (<>
-                        <div className="overflow-hidden min-w-48 rounded-md border border-gray-400 animate-pulse">
+                      Array.from({ length: 3 }, (_, id) => (
+                        <div key={id} className="overflow-hidden min-w-48 rounded-md border border-gray-400 animate-pulse">
                           <div className="p-4 space-y-2">
                             <div className="h-4 bg-gray-300 rounded w-3/4" />
                             <div className="h-3 bg-gray-300 rounded w-full" />
@@ -271,7 +271,7 @@ out body;`
                             <div className="h-8 bg-gray-300 rounded-lg mt-3" />
                           </div>
                         </div>
-                      </>))
+                      ))
                     }
                   </>
                 ) : suggestionError ? (
