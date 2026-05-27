@@ -37,6 +37,8 @@ function Landing() {
     setLoadingSearch(true)
     setLoadingError(false)
 
+    const controller = new AbortController();
+
 
     const timer = setTimeout(async () => {
 
@@ -45,7 +47,9 @@ function Landing() {
           input + " India"
         )}&limit=5&lang=en`;
 
-        const resp = await fetch(url);
+        const resp = await fetch(url,{
+          signal: controller.signal
+        });
 
         if (!resp.ok) {
           throw new Error("API_failed")
@@ -62,15 +66,22 @@ function Landing() {
         setError(false);
       }
       catch (err) {
-        setLoadingError(true)
+        if(err.name !== "AbortError"){
+          setLoadingError(true)
+        }
       }
       finally {
-        setLoadingSearch(false)
+        if(!controller.signal.aborted){
+          setLoadingSearch(false)
+        }
       }
 
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    }
 
   }, [input])
 

@@ -22,6 +22,8 @@ function Trip() {
   const [locations, setLocations] = useState([]);
   const [polylineCoords, setPolylineCoords] = useState([])
   const [route, setRoute] = useState()
+  const [popupMessage, setPopupMessage] = useState("")
+  const [popup, setPopup] = useState(false)
   const [tripDetails, setTripDetails] = useState({
     startLocation: '',
     endLocation: '',
@@ -68,12 +70,14 @@ function Trip() {
     setDepartureLoadingError(false)
     setDepartureLoadingSearch(true)
 
+    const controller = new AbortController();
+
     const timer = setTimeout(async () => {
 
       try {
         const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(departureInput + ' India')}&limit=5&lang=en`;
 
-        let rawData = await fetch(url)
+        let rawData = await fetch(url, { signal: controller.signal })
 
         if (!rawData.ok) {
           throw new Error("API_failed")
@@ -89,17 +93,24 @@ function Trip() {
 
         setDepError(false)
       }
-      catch {
-        setDepartureLoadingError(true)
+      catch (err) {
+        if (err.name !== "AbortError") {
+          setDepartureLoadingError(true)
+        }
+
       }
       finally {
-        setDepartureLoadingSearch(false)
+        if (!controller.signal.aborted) {
+          setDepartureLoadingSearch(false)
+        }
       }
 
     }, 300)
 
-    return () => clearTimeout(timer)
-
+    return () => {
+      clearTimeout(timer)
+      controller.abort();
+    }
 
   }, [departureInput])
 
@@ -127,12 +138,16 @@ function Trip() {
     setDestinationLoadingError(false)
     setDestinationLoadingSearch(true)
 
+    const controller = new AbortController();
+
     const timer = setTimeout(async () => {
 
       try {
         const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(destinationInput + ' India')}&limit=5&lang=en`;
 
-        let rawData = await fetch(url)
+        let rawData = await fetch(url, {
+          signal: controller.signal
+        })
 
         if (!rawData.ok) {
           throw new Error("API_failed")
@@ -147,17 +162,23 @@ function Trip() {
 
         setDestError(false)
       }
-      catch {
-        setDestinationLoadingError(true)
+      catch (err) {
+        if (err.name !== "AbortError") {
+          setDestinationLoadingError(true)
+        }
       }
       finally {
-        setDestinationLoadingSearch(false)
+        if(!controller.signal.aborted){
+          setDestinationLoadingSearch(false)
+        }
       }
-
 
     }, 300);
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      controller.abort();
+    }
 
   }, [destinationInput])
 
@@ -355,35 +376,64 @@ function Trip() {
 
       else {
 
+        setPopup(true)
+        setPopupMessage("Route is being generated, please wait...")
+
         setPolylineCoords([])
 
         const coordinates = points
           .map(loc => `${loc.coords[1]},${loc.coords[0]}`)
           .join(";");
 
-        const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson&alternatives=true&steps=true`;
+        try {
+
+          const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson&alternatives=true&steps=true`;
 
 
-        const rawData = await fetch(url);
-        const data = await rawData.json();
+          const rawData = await fetch(url);
+          if (!rawData.ok) {
+            throw new Error("route not fetched");
+          }
+          const data = await rawData.json();
 
-        if (!data.routes || data.routes.length === 0) {
-          setPolylineCoords([]);
-          return;
+          if (!data.routes || data.routes.length === 0) {
+            setPolylineCoords([]);
+            setPopup("No route found")
+            setTimeout(() => {
+              setPopup(false)
+            }, 3000);
+            return;
+          }
+
+          const bestRoute = pickBestDrivableRoute(data.routes);
+
+          setRoute(bestRoute)
+
+          const coords = bestRoute.geometry.coordinates.map(
+            ([lng, lat]) => [lat, lng]
+          );
+
+
+          setPolylineCoords(coords);
+
+          routeCache.current = JSON.stringify(points.map(l => l.coords))
+
+          setPopupMessage("Route generated successfully")
+          setTimeout(() => {
+            setPopup(false)
+          }, 3000);
+
+
         }
+        catch (err) {
 
-        const bestRoute = pickBestDrivableRoute(data.routes);
+          setPopupMessage("Failed to generate route, try again later")
+          setTimeout(() => {
+            setPopup(false)
+          }, 3000);
+          setPolylineCoords([])
 
-        setRoute(bestRoute)
-
-        const coords = bestRoute.geometry.coordinates.map(
-          ([lng, lat]) => [lat, lng]
-        );
-
-
-        setPolylineCoords(coords);
-
-        routeCache.current = JSON.stringify(points.map(l=>l.coords)) 
+        }
 
       }
 
@@ -460,7 +510,15 @@ function Trip() {
 
   return (
     <div>
-      <div className="flex flex-row h-[calc(100vh-121px)] w-screen">
+      <div className="relative flex flex-row h-[calc(100vh-121px)] w-screen">
+        {
+          popup && (
+            <div className={`z-50 absolute bottom-4 right-4 flex items-center gap-3 px-4 py-3 bg-white border border-teal-400 rounded-lg ring-2 ring-teal-200  transition-all duration-500 ${popup ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}`}>
+              <div className="w-2 h-2 rounded-full bg-teal-500 shrink-0" />
+              <span className="sm:text-base text-sm text-gray-600">{popupMessage}</span>
+            </div>
+          )
+        }
         <div className="w-[70px] border-r-teal-200 border flex flex-col">
           <button className={`flex flex-col items-center cursor-pointer hover:text-teal-600 text-3xl pt-8
             ${activeTab == "overview" ? "text-teal-600" : "text-black"}`} onClick={() => setActiveTab("overview")}>
