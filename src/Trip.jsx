@@ -89,8 +89,6 @@ function Trip() {
 
         setSuggestions2(filteredData.splice(0, 3))
 
-        console.log(filteredData)
-
         setDepError(false)
       }
       catch (err) {
@@ -114,7 +112,7 @@ function Trip() {
 
   }, [departureInput])
 
-  async function handleDestinationInput(e) {
+  function handleDestinationInput(e) {
 
     const value = e.target.value;
     setDestinationInput(value)
@@ -168,7 +166,7 @@ function Trip() {
         }
       }
       finally {
-        if(!controller.signal.aborted){
+        if (!controller.signal.aborted) {
           setDestinationLoadingSearch(false)
         }
       }
@@ -182,49 +180,56 @@ function Trip() {
 
   }, [destinationInput])
 
-  function getCurrentLocation(e) {
+  async function getCurrentLocation(e) {
+    const isChecked = e.target.checked;
 
-    setCheckbox(e.target.checked)
-    if (e.target.checked) {
-
-      setDepartureInput("Current location")
-      setTripDetails({ ...tripDetails, startLocation: "Current location" })
-
-    }
-    if (!e.target.checked) {
-
-      setDepartureInput("")
-      setTripDetails({ ...tripDetails, startLocation: "" })
+    if (!isChecked) {
+      setCheckbox(false);
+      setDepartureInput("");
+      setTripDetails(prev => ({ ...prev, startLocation: "" }));
+      setLocations(prev => prev.filter(loc => loc.id !== "start"));
+      return;
     }
 
+    const permission = await navigator.permissions.query({ name: "geolocation" });
+    if (permission.state === "denied") {
+      setCheckbox(false);
+      alert("Location access is denied. Please enable it from browser settings.");
+      return;
+    }
+
+    const coords = await geolocation();
+    if (!coords) {
+      setCheckbox(false);
+      alert("Location access denied.");
+      return;
+    }
+
+    setCheckbox(true);
+    setDepartureInput("Current location");
+    setTripDetails(prev => ({ ...prev, startLocation: "Current location" }));
+    setLocations(prev => [
+      { id: "start", name: "Current location", coords, day: 1 },
+      ...prev.filter(loc => loc.id !== "start")
+    ]);
   }
 
   function geolocation() {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        console.warn("Geolocation not supported");
         resolve(null);
         return;
       }
 
-      const timeoutId = setTimeout(() => {
-        console.warn("Geolocation request timed out");
-        resolve(null);
-      }, 5000);
-
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          clearTimeout(timeoutId);
           const lat = Number(position.coords.latitude);
           const lng = Number(position.coords.longitude);
           resolve([lat, lng]);
         },
-        (error) => {
-          clearTimeout(timeoutId);
-          console.warn("Geolocation error:", error.message);
+        () => {
           resolve(null);
-        },
-        { timeout: 5000 }
+        }
       );
     });
   }
@@ -270,46 +275,17 @@ function Trip() {
       return;
     }
 
+    if (tripDetails.startLocation === "" || checkbox) return;
+
     async function updateGeocoding() {
-
-      let coords = await geocoding(tripDetails.startLocation)
-
-      setLocations((prev) => [
-        {
-          id: "start",
-          name: tripDetails.startLocation,
-          coords: coords,
-          day: 1
-        }, ...prev.filter(loc => loc.id != "start")
+      const coords = await geocoding(tripDetails.startLocation)
+      setLocations(prev => [
+        { id: "start", name: tripDetails.startLocation, coords, day: 1 },
+        ...prev.filter(loc => loc.id !== "start")
       ])
     }
 
-    async function updateGeolocation() {
-      let coords = await geolocation()
-
-      setLocations((prev) => [
-        {
-          id: "start",
-          name: tripDetails.startLocation,
-          coords: coords,
-          day: 1
-        }, ...prev.filter(loc => loc.id != "start")
-      ])
-    }
-
-    if (checkbox) {
-      updateGeolocation()
-    }
-
-    else if (tripDetails.startLocation == "") {
-      setLocations((prev) => [
-        ...prev.filter(loc => loc.id != "start")
-      ])
-    }
-
-    else {
-      updateGeocoding();
-    }
+    updateGeocoding();
 
   }, [tripDetails.startLocation])
 
@@ -421,7 +397,7 @@ function Trip() {
 
           if (!data.routes || data.routes.length === 0) {
             setPolylineCoords([]);
-            setPopup("No route found")
+            setPopupMessage("No route found")
             setTimeout(() => {
               setPopup(false)
             }, 3000);

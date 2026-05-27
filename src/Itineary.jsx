@@ -268,16 +268,47 @@ function Itineary({ tripDetails, locations, route }) {
                                     </div>
                                     <div>
                                         <div className="text-md   mb-1 font-bold tracking-wide">Distance</div>
-                                        <div className="text-md   mb-1 font-bold tracking-wide leading-tight">{(route?.distance / 1000).toFixed(1) + " km"}
-                                        </div>
+                                            <div className="text-md   mb-1 font-bold tracking-wide leading-tight">
+                                                {typeof route?.distance === 'number' ? (
+                                                    (route.distance / 1000).toFixed(1) + " km"
+                                                ) : (
+                                                    <div className="inline-block bg-teal-300/70 animate-pulse rounded-md h-6 w-28" />
+                                                )}
+                                            </div>
                                     </div>
                                     <div>
                                         <div className="text-md   mb-1 font-bold tracking-wide">Travel Time</div>
-                                        <div className="text-md   mb-1 font-bold tracking-wide">{Math.floor(route?.duration / 3600) + " h " + Math.round((route?.duration % 3600) / 60) + " m"}</div>
+                                            <div className="text-md   mb-1 font-bold tracking-wide">
+                                                {typeof route?.duration === 'number' ? (
+                                                    Math.floor(route.duration / 3600) + " h " + Math.round((route.duration % 3600) / 60) + " m"
+                                                ) : (
+                                                    <div className="inline-block bg-teal-300/70 animate-pulse rounded-md h-6 w-20" />
+                                                )}
+                                            </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                            </div>
+
+                            {/* Waiting screen when route is not yet available */}
+                            {!route && (
+                                <div className="mt-8 p-8 flex items-center justify-center">
+                                    <div className="w-full max-w-xl bg-white rounded-2xl shadow-lg border border-teal-100 p-8 text-center">
+                                        <div className="flex items-center justify-center mb-4">
+                                            <div className="h-12 w-12 rounded-full bg-teal-200 flex items-center justify-center animate-pulse">
+                                                <FontAwesomeIcon icon={faTriangleExclamation} className="text-teal-700" />
+                                            </div>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-800">Generating route</h3>
+                                        <p className="text-sm text-gray-500 mt-2">We're calculating the best route for your trip. This may take a few seconds — please wait.</p>
+                                        <div className="mt-6 flex items-center justify-center gap-3">
+                                            <div className="h-3 w-20 bg-teal-300 rounded-full animate-pulse" />
+                                            <div className="h-3 w-20 bg-teal-300 rounded-full animate-pulse delay-75" />
+                                            <div className="h-3 w-20 bg-teal-300 rounded-full animate-pulse delay-150" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         <div className="w-full px-4 mt-12 flex flex-row relative">
                             <div className="absolute top-4 w-2 bottom-11 bg-teal-600 rounded-full ml-10 -z-10">
                             </div>
