@@ -202,33 +202,56 @@ function Trip() {
   function geolocation() {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
+        console.warn("Geolocation not supported");
         resolve(null);
         return;
       }
 
+      const timeoutId = setTimeout(() => {
+        console.warn("Geolocation request timed out");
+        resolve(null);
+      }, 5000);
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          clearTimeout(timeoutId);
           const lat = Number(position.coords.latitude);
           const lng = Number(position.coords.longitude);
           resolve([lat, lng]);
         },
-        () => {
+        (error) => {
+          clearTimeout(timeoutId);
+          console.warn("Geolocation error:", error.message);
           resolve(null);
-        }
+        },
+        { timeout: 5000 }
       );
     });
   }
 
 
   async function geocoding(location) {
-    const rawData = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(location + ",india")}&key=0b37e65606bf435f95a9915069d9e07f`)
+    try {
+      const apiKey = import.meta.env.VITE_OPENCAGE_API_KEY;
+      const rawData = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(location + ",india")}&key=${apiKey}`)
 
-    const data = await rawData.json()
+      if (!rawData.ok) {
+        throw new Error("Failed to fetch geocoding data");
+      }
 
-    let coords = [Number(data.results[0].geometry.lat), Number(data.results[0].geometry.lng)]
+      const data = await rawData.json()
 
-    return coords;
+      if (!data.results?.[0]?.geometry) {
+        throw new Error(`No coordinates found for: ${location}`);
+      }
 
+      let coords = [Number(data.results[0].geometry.lat), Number(data.results[0].geometry.lng)]
+
+      return coords;
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      throw err;
+    }
   }
 
   useEffect(() => {
@@ -492,12 +515,7 @@ function Trip() {
   }
 
 
-  useEffect(() => {
 
-    window.tripDetails = tripDetails
-    window.locations = locations
-    window.routeModel = routeModel;
-  }, [tripDetails, locations, routeModel]);
 
   const transportIcons = {
     flight: faPlane,
