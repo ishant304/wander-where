@@ -297,28 +297,45 @@ function Trip() {
     }
 
     async function updateLocations() {
+      try {
+        const coords = await geocoding(tripDetails.endLocation)
 
-      let coords = await geocoding(tripDetails.endLocation)
-
-      setLocations((prev) => [
-        ...prev.filter(loc => loc.id != "end"),
-        {
-          id: "end",
-          name: tripDetails.endLocation,
-          coords: coords,
-          day: tripDetails.duration
+        if (!coords || coords.length !== 2) {
+          setPopupMessage("Unable to resolve ending location coordinates");
+          setPopup(true);
+          setTimeout(() => setPopup(false), 3000);
+          return;
         }
-      ])
 
+        setLocations((prev) => [
+          ...prev.filter(loc => loc.id != "end"),
+          {
+            id: "end",
+            name: tripDetails.endLocation,
+            coords: coords,
+            day: tripDetails.duration
+          }
+        ])
+      } catch (err) {
+        setPopupMessage("Failed to resolve ending location");
+        setPopup(true);
+        setTimeout(() => setPopup(false), 3000);
+      }
     }
 
     if (tripDetails.endLocation == "") {
       setLocations((prev) => [
         ...prev.filter(loc => loc.id != "end")
       ])
+      setRoute(null);
+      setRouteModel("initial");
+      setPolylineCoords([]);
     }
 
     else {
+      setRoute(null);
+      setRouteModel("initial");
+      setPolylineCoords([]);
       updateLocations()
     }
 

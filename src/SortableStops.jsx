@@ -53,7 +53,7 @@ function SortableStops({ item, isOverlay = false, locations, setLocations }) {
 
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={`w-full h-auto border border-gray-400 rounded-md mb-4 p-4 ${item.id === "start" ? "opacity-80 cursor-not-allowed" : "cursor-grab active:cursor-grabbing"}`}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className={`w-full h-auto border touch-none select-none border-gray-400 rounded-md mb-4 p-4 ${item.id === "start" ? "opacity-80 cursor-not-allowed" : "cursor-grab active:cursor-grabbing"}`}>
       {
         item.id === "start" ? (
           <div>

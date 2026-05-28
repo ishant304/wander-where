@@ -7,7 +7,7 @@ import DaysColumn from "./DaysColumn";
 import SortableStops from "./SortableStops";
 import { arrayMove } from "@dnd-kit/sortable";
 
-function StopsTab({ suggestedPlaces, setSuggestedPlaces, locations, setLocations, routeModel, setRouteModel }) {
+function StopsTab({ tripDetails, setTripDetails, suggestedPlaces, setSuggestedPlaces, locations, setLocations, routeModel, setRouteModel }) {
 
   const [activeId, setActiveId] = useState(null)
   const [searchInput, setSearchInput] = useState("")
@@ -125,7 +125,7 @@ function StopsTab({ suggestedPlaces, setSuggestedPlaces, locations, setLocations
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 200,
-        tolerance: 5
+        tolerance: 10
       }
     }),
     useSensor(KeyboardSensor)
@@ -315,6 +315,7 @@ out body;`
 
             <h1 className="mt-10 text-2xl font-bold text-gray-800 mb-2 ">Reorder you stops</h1>
             <p className="text-xs text-gray-500 mb-8">Drag stops to reorder your list</p>
+            <div className="touch-none">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -335,6 +336,7 @@ out body;`
                 }
               </DragOverlay>
             </DndContext>
+            </div>
             <div>
               <button className="w-full h-12 bg-gradient-to-r from-[rgb(94,221,189)]  to-[rgb(27,193,199)] rounded-full mt-8 mb-4" onClick={handleGenerateRoute}>
                 Generate Route

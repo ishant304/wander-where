@@ -244,348 +244,411 @@ function Itineary({ tripDetails, locations, route }) {
             {
                 tripDetails.endLocation != "" && tripDetails.startLocation != "" ? (
                     <>
-            {
-                activeTab === "route" && (
-                    <div className="p-4">
-                        <div className="pt-3 text-2xl font-bold text-gray-800 mb-2">
-                            Your Trip, Day by Day
-                        </div>
-                        <p className="text-xs text-gray-500 mb-6">Overview of your route, daily plan, and travel flow.</p>
-                        <div className="mt-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl p-8 -2xl text-white relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
-                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
+                        {
+                            activeTab === "route" && (
+                                <div className="p-4">
+                                    <div className="pt-3 text-2xl font-bold text-gray-800 mb-2">
+                                        Your Trip, Day by Day
+                                    </div>
+                                    <p className="text-xs text-gray-500 mb-6">Overview of your route, daily plan, and travel flow.</p>
+                                    <div className="mt-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl p-8 -2xl text-white relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+                                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
 
-                            <div>
-                                <h3 className="text-nowrap text-2xl font-black mb-6">Trip Summary</h3>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <div className="text-md leading-tight  mb-1 font-bold tracking-wide">Total Days</div>
-                                        <div className="text-md   mb-1 font-bold tracking-wide leading-tight">{tripDetails.duration} days</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-md leading-tight   mb-1 font-bold tracking-wide">Total Stops</div>
-                                        <div className="text-md   mb-1 font-bold tracking-wide leading-tight">{locations.length} stops</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-md   mb-1 font-bold tracking-wide">Distance</div>
-                                            <div className="text-md   mb-1 font-bold tracking-wide leading-tight">
-                                                {typeof route?.distance === 'number' ? (
-                                                    (route.distance / 1000).toFixed(1) + " km"
-                                                ) : (
-                                                    <div className="inline-block bg-teal-300/70 animate-pulse rounded-md h-6 w-28" />
-                                                )}
-                                            </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-md   mb-1 font-bold tracking-wide">Travel Time</div>
-                                            <div className="text-md   mb-1 font-bold tracking-wide">
-                                                {typeof route?.duration === 'number' ? (
-                                                    Math.floor(route.duration / 3600) + " h " + Math.round((route.duration % 3600) / 60) + " m"
-                                                ) : (
-                                                    <div className="inline-block bg-teal-300/70 animate-pulse rounded-md h-6 w-20" />
-                                                )}
-                                            </div>
-                                    </div>
-                                </div>
-                            </div>
-                            </div>
-
-                            {/* Waiting screen when route is not yet available */}
-                            {!route && (
-                                <div className="mt-8 p-8 flex items-center justify-center">
-                                    <div className="w-full max-w-xl bg-white rounded-2xl shadow-lg border border-teal-100 p-8 text-center">
-                                        <div className="flex items-center justify-center mb-4">
-                                            <div className="h-12 w-12 rounded-full bg-teal-200 flex items-center justify-center animate-pulse">
-                                                <FontAwesomeIcon icon={faTriangleExclamation} className="text-teal-700" />
-                                            </div>
-                                        </div>
-                                        <h3 className="text-xl font-bold text-gray-800">Generating route</h3>
-                                        <p className="text-sm text-gray-500 mt-2">We're calculating the best route for your trip. This may take a few seconds — please wait.</p>
-                                        <div className="mt-6 flex items-center justify-center gap-3">
-                                            <div className="h-3 w-20 bg-teal-300 rounded-full animate-pulse" />
-                                            <div className="h-3 w-20 bg-teal-300 rounded-full animate-pulse delay-75" />
-                                            <div className="h-3 w-20 bg-teal-300 rounded-full animate-pulse delay-150" />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        <div className="w-full px-4 mt-12 flex flex-row relative">
-                            <div className="absolute top-4 w-2 bottom-11 bg-teal-600 rounded-full ml-10 -z-10">
-                            </div>
-                            <div className="w-full">
-                                {
-                                    itineary.map((item, outerIndex) => (
-                                        <div key={item.day} className="flex flex-row items-start">
-                                            <div className="min-w-[85px] bg-white rounded-2xl border-4 border-teal-600 px-4 py-3 flex flex-col items-center justify-center mb-4">
+                                        <div>
+                                            <h3 className="text-nowrap text-2xl font-black mb-6">Trip Summary</h3>
+                                            <div className="grid grid-cols-2 gap-6">
                                                 <div>
-                                                    <p className="text-sm uppercase tracking-wide text-gray-700">
-                                                        Day {item.day}
-                                                    </p>
+                                                    <div className="text-md leading-tight  mb-1 font-bold tracking-wide">Total Days</div>
+                                                    <div className="text-md   mb-1 font-bold tracking-wide leading-tight">{tripDetails.duration} days</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-md leading-tight   mb-1 font-bold tracking-wide">Total Stops</div>
+                                                    <div className="text-md   mb-1 font-bold tracking-wide leading-tight">{locations.length} stops</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-md   mb-1 font-bold tracking-wide">Distance</div>
+                                                    <div className="text-md   mb-1 font-bold tracking-wide leading-tight">
+                                                        {typeof route?.distance === 'number' ? (
+                                                            (route.distance / 1000).toFixed(1) + " km"
+                                                        ) : (
+                                                            <div className="inline-block bg-teal-300/70 animate-pulse rounded-md h-6 w-28" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-md   mb-1 font-bold tracking-wide">Travel Time</div>
+                                                    <div className="text-md   mb-1 font-bold tracking-wide">
+                                                        {typeof route?.duration === 'number' ? (
+                                                            Math.floor(route.duration / 3600) + " h " + Math.round((route.duration % 3600) / 60) + " m"
+                                                        ) : (
+                                                            <div className="inline-block bg-teal-300/70 animate-pulse rounded-md h-6 w-20" />
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="ml-6 flex flex-col gap-6 w-full">
+                                        </div>
+                                    </div>
 
-                                                {item.stops.map((stop, index) => (
-                                                    <div key={stop.id} className="flex flex-col gap-3 max-w-full">
 
-                                                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                                                            <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">
-                                                                {stop.id === "start" ? "Departure" : outerIndex === itineary.length - 1 ? "Destination" : "Stop"}
-                                                            </p>
-                                                            <h3 className="text-lg font-semibold text-gray-800">
-                                                                {stop.name}
-                                                            </h3>
+                                    {!route && (
+                                        <div className="w-full px-4 mt-12 flex flex-row relative">
+                                            <div className="absolute top-4 w-2 bottom-11 bg-teal-300 rounded-full ml-10 -z-10 animate-pulse" />
+
+                                            <div className="w-full">
+                                                {[{ day: 1 }, { day: 2 }].map((item, outerIndex) => (
+                                                    <div key={item.day} className="flex flex-row items-start">
+
+                                                        <div className="min-w-[85px] bg-teal-200 rounded-2xl border-4 border-teal-300 px-4 py-3 flex flex-col items-center justify-center mb-4 animate-pulse">
+                                                            <div className="h-2.5 w-10 bg-teal-300 rounded mb-1.5" />
+                                                            <div className="h-3 w-7 bg-teal-300 rounded" />
                                                         </div>
 
-                                                        {item.legs[index] && (
-                                                            <div className="ml-6 bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-600 shadow-inner mb-3">
+                                                        <div className="ml-6 flex flex-col gap-6 w-full">
 
-                                                                <div className="flex items-center gap-4 flex-wrap">
-
-                                                                    <div className="flex items-center gap-2">
-                                                                        <FontAwesomeIcon className="text-teal-600" icon={faRoute} />
-                                                                        <span>
-                                                                            {(item.legs[index].distance / 1000).toFixed(1)} km
-                                                                        </span>
-                                                                    </div>
-
-                                                                    <div className="flex items-center gap-2">
-                                                                        <FontAwesomeIcon className="text-teal-600" icon={faClock} />
-                                                                        <span>
-                                                                            {Math.floor(item.legs[index].duration / 3600)}h{" "}
-                                                                            {Math.round((item.legs[index].duration % 3600) / 60)}
-                                                                        </span>
-                                                                    </div>
-
-                                                                    <div className="flex items-center gap-2">
-                                                                        <FontAwesomeIcon className="text-teal-600" icon={faRoad} />
-                                                                        <span title={item.legs[index].summary?.replace(",", " &")} className="capitalize truncate max-w-44">
-                                                                            {item.legs[index].summary?.replace(",", " &")}
-                                                                        </span>
-                                                                    </div>
-
-                                                                </div>
+                                                            <div className="bg-teal-50 rounded-2xl p-5 shadow-sm border border-teal-100 animate-pulse">
+                                                                <div className="h-2.5 w-16 bg-teal-100 rounded mb-2" />
+                                                                <div className="h-5 w-40 bg-teal-100 rounded" />
                                                             </div>
-                                                        )}
 
+                                                            {outerIndex < 1 && (
+                                                                <div className="ml-6 bg-teal-50 rounded-xl px-4 py-3 shadow-inner mb-3 animate-pulse flex items-center gap-4 flex-wrap">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="h-3.5 w-3.5 bg-teal-100 rounded" />
+                                                                        <div className="h-3 w-12 bg-teal-100 rounded" />
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="h-3.5 w-3.5 bg-teal-100 rounded" />
+                                                                        <div className="h-3 w-10 bg-teal-100 rounded" />
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="h-3.5 w-3.5 bg-teal-100 rounded" />
+                                                                        <div className="h-3 w-24 bg-teal-100 rounded" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                        </div>
                                                     </div>
                                                 ))}
-
                                             </div>
                                         </div>
-                                    ))
-                                }
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-            {
-                activeTab === "budget" && (
-                    <div className="p-4">
-                        <div className="pt-3 text-2xl font-bold text-gray-800 mb-2">
-                            Budget Overview
-                        </div>
-                        <p className="text-xs text-gray-500 mb-6">A smart cost estimate based on your travel choices.</p>
-                        <div className="mt-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl p-8 text-white relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
-                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24" />
+                                    )}
 
-                            <div className="relative z-10">
-                                <h3 className="text-2xl font-black mb-2">Estimated Trip Cost</h3>
-                                <p className="text-white/80 mb-6">
-                                    Calculated from your trip preferences
-                                </p>
+                                    {route && (
+                                        <div className="w-full px-4 mt-12 flex flex-row relative">
+                                            <div className="absolute top-4 w-2 bottom-11 bg-teal-600 rounded-full ml-10 -z-10">
+                                            </div>
+                                            <div className="w-full">
+                                                {
+                                                    itineary.map((item, outerIndex) => (
+                                                        <div key={item.day} className="flex flex-row items-start">
+                                                            <div className="min-w-[85px] bg-white rounded-2xl border-4 border-teal-600 px-4 py-3 flex flex-col items-center justify-center mb-4">
+                                                                <div>
+                                                                    <p className="text-sm uppercase tracking-wide text-gray-700">
+                                                                        Day {item.day}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="ml-6 flex flex-col gap-6 w-full">
 
-                                <div className="mb-2">
-                                    <div className="text-4xl font-extrabold leading-tight">
-                                        ₹{budget.totalCost.toLocaleString()}
-                                    </div>
-                                    <div className="mt-2 text-sm text-white/80">
-                                        ₹{Math.round(budget.totalCost / tripDetails.travelers)} per person ·
-                                        ₹{Math.round(budget.totalCost / tripDetails.duration)} per day
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <p className="mt-6 mb-3 text-lg text-gray-700">What's driving your cost?</p>
-                        <div className="flex flex-wrap gap-4">
-                            <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl hover:bg-teal-100/60 transition w-full">
+                                                                {item.stops.map((stop, index) => (
+                                                                    <div key={stop.id} className="flex flex-col gap-3 max-w-full">
 
-                                <div className="text-2xl mt-1">
-                                    <FontAwesomeIcon
-                                        className="text-teal-600"
-                                        icon={faHouseCircleCheck}
-                                    />
-                                </div>
+                                                                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                                                                            <p className="text-sm text-gray-400 uppercase tracking-wide mb-1">
+                                                                                {stop.id === "start" ? "Departure" : outerIndex === itineary.length - 1 ? "Destination" : "Stop"}
+                                                                            </p>
+                                                                            <h3 className="text-lg font-semibold text-gray-800">
+                                                                                {stop.name}
+                                                                            </h3>
+                                                                        </div>
 
-                                <div className="flex-1">
+                                                                        {item.legs[index] && (
+                                                                            <div className="ml-6 bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-600 shadow-inner mb-3">
 
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-lg font-medium text-slate-900">
-                                            Accommodation
-                                        </span>
+                                                                                <div className="flex items-center gap-4 flex-wrap">
 
-                                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-200 text-teal-900">
-                                            {((budget.accommodationCost / budget.totalCost) * 100).toFixed(0)}%
-                                        </span>
-                                    </div>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <FontAwesomeIcon className="text-teal-600" icon={faRoute} />
+                                                                                        <span>
+                                                                                            {(item.legs[index].distance / 1000).toFixed(1)} km
+                                                                                        </span>
+                                                                                    </div>
 
-                                    <div className="text-sm font-semibold text-slate-800 mt-1">
-                                        ₹{budget.accommodationCost.toLocaleString()}
-                                    </div>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <FontAwesomeIcon className="text-teal-600" icon={faClock} />
+                                                                                        <span>
+                                                                                            {Math.floor(item.legs[index].duration / 3600)}h{" "}
+                                                                                            {Math.round((item.legs[index].duration % 3600) / 60)}
+                                                                                        </span>
+                                                                                    </div>
 
-                                    <div className="text-xs font-bold text-slate-600 mt-1">
-                                        <span className="capitalize">{tripDetails.accommodation} </span>· {tripDetails.accommodation == "hostel" ? tripDetails.travelers + " beds" : Math.ceil(tripDetails.travelers / 2) + " rooms"} · {tripDetails.duration} nights
-                                    </div>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <FontAwesomeIcon className="text-teal-600" icon={faRoad} />
+                                                                                        <span title={item.legs[index].summary?.replace(",", " &")} className="capitalize truncate max-w-44">
+                                                                                            {item.legs[index].summary?.replace(",", " &")}
+                                                                                        </span>
+                                                                                    </div>
 
-                                    <div className="text-xs text-slate-500 mt-1">
-                                        {tripDetails.accommodation == "hostel" ? `≈ ₹${Math.round(budget.accommodationCost / (tripDetails.travelers * tripDetails.duration)).toLocaleString()} per bed / night` : `≈ ₹${Math.round(budget.accommodationCost / (Math.ceil(tripDetails.travelers / 2) * tripDetails.duration)).toLocaleString()} per room / night`}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
 
-                                    </div>
+                                                                    </div>
+                                                                ))}
 
-                                </div>
-                            </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                }
+                                            </div>
+                                        </div>
+                                    )
+                                    }
 
-
-                            <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl hover:bg-teal-100/60 transition w-full">
-
-                                <div className="text-2xl mt-1">
-                                    <FontAwesomeIcon className="text-teal-600" icon={faCar} />
-                                </div>
-
-                                <div className="flex-1">
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-lg font-medium text-slate-900">
-                                            Transportation
-                                        </span>
-
-                                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-200 text-teal-900">
-                                            {((budget.transportationCost / budget.totalCost) * 100).toFixed(0)}%
-                                        </span>
-                                    </div>
-
-                                    <div className="text-sm font-semibold text-slate-800 mt-1">
-                                        ₹{budget.transportationCost.toLocaleString()}
-                                    </div>
-
-                                    <div className="text-xs font-bold text-slate-600 mt-1">
-                                        <span className="capitalize">{tripDetails.transportation} </span>· {(itineary.reduce(
-                                            (sum, day) => sum + (day.summary?.distance || 0),
-                                            0
-                                        ) / 1000).toFixed(0)} km
-                                    </div>
-
-                                    <div className="text-xs text-slate-500 mt-1">
-                                        {
-                                            tripDetails.transportation == "car" ? (
-                                                <>
-                                                    <p>Car's mileage (default i.e. 15) : </p>
-                                                    <input type="number" className="w-12 px-2 py-1 mt-1 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-teal-300" value={carMileage} onChange={(e) => setCarMileage(e.target.value)} />
-                                                </>
-                                            ) : tripDetails.transportation == "bike" ? (
-                                                <>
-                                                    <p>Bike's mileage (default i.e. 30) : </p>
-                                                    <input type="number" className="w-12 px-2 py-1 mt-1 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-teal-300" value={bikeMileage} onChange={(e) => setBikeMileage(e.target.value)} />
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <p>Round Trip cost : {budget.transportationCost.toLocaleString()}</p>
-                                                    <p>One Way cost : {(budget.transportationCost / 2).toLocaleString()}</p>
-                                                </>
-                                            )
-                                        }
-                                    </div>
 
                                 </div>
-                            </div>
+                            )
+                        }
+                        {
+                            activeTab === "budget" && (
+                                <div className="p-4">
+                                    <div className="pt-3 text-2xl font-bold text-gray-800 mb-2">
+                                        Budget Overview
+                                    </div>
+                                    <p className="text-xs text-gray-500 mb-6">A smart cost estimate based on your travel choices.</p>
+                                    {!route ? (
+                                        <div className="mt-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl p-8 text-white relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
+                                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24" />
+                                            <div className="relative z-10">
+                                                <h3 className="text-2xl font-black mb-2">Estimated Trip Cost</h3>
+                                                <p className="text-white/80 mb-6">Calculated from your trip preferences</p>
+                                                <div className="mb-2">
+                                                    <div className="h-12 w-48 bg-white/20 rounded-lg animate-pulse mb-4" />
+                                                    <div className="space-y-2">
+                                                        <div className="h-4 w-64 bg-white/20 rounded animate-pulse" />
+                                                        <div className="h-4 w-56 bg-white/20 rounded animate-pulse" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="mt-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl p-8 text-white relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32" />
+                                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24" />
+                                            <div className="relative z-10">
+                                                <h3 className="text-2xl font-black mb-2">Estimated Trip Cost</h3>
+                                                <p className="text-white/80 mb-6">Calculated from your trip preferences</p>
+                                                <div className="mb-2">
+                                                    <div className="text-4xl font-extrabold leading-tight">
+                                                        ₹{budget.totalCost.toLocaleString()}
+                                                    </div>
+                                                    <div className="mt-2 text-sm text-white/80">
+                                                        ₹{Math.round(budget.totalCost / tripDetails.travelers)} per person ·
+                                                        ₹{Math.round(budget.totalCost / tripDetails.duration)} per day
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <p className="mt-6 mb-3 text-lg text-gray-700">What's driving your cost?</p>
+                                    <div className="flex flex-wrap gap-4">
+                                        {!route ? (
+                                            <>
+                                                <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl w-full animate-pulse">
+                                                    <div className="text-2xl mt-1 w-6 h-6 bg-teal-200 rounded" />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="h-5 w-32 bg-teal-200 rounded" />
+                                                            <div className="h-5 w-12 bg-teal-200 rounded-full" />
+                                                        </div>
+                                                        <div className="h-5 w-40 bg-teal-200 rounded mb-2" />
+                                                        <div className="h-4 w-48 bg-teal-100 rounded mb-2" />
+                                                        <div className="h-4 w-56 bg-teal-100 rounded" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl w-full animate-pulse">
+                                                    <div className="text-2xl mt-1 w-6 h-6 bg-teal-200 rounded" />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="h-5 w-32 bg-teal-200 rounded" />
+                                                            <div className="h-5 w-12 bg-teal-200 rounded-full" />
+                                                        </div>
+                                                        <div className="h-5 w-40 bg-teal-200 rounded mb-2" />
+                                                        <div className="h-4 w-48 bg-teal-100 rounded mb-2" />
+                                                        <div className="h-4 w-56 bg-teal-100 rounded" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl w-full animate-pulse">
+                                                    <div className="text-2xl mt-1 w-6 h-6 bg-teal-200 rounded" />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="h-5 w-32 bg-teal-200 rounded" />
+                                                            <div className="h-5 w-12 bg-teal-200 rounded-full" />
+                                                        </div>
+                                                        <div className="h-5 w-40 bg-teal-200 rounded mb-2" />
+                                                        <div className="h-4 w-48 bg-teal-100 rounded mb-2" />
+                                                        <div className="h-4 w-56 bg-teal-100 rounded" />
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl w-full animate-pulse">
+                                                    <div className="text-2xl mt-1 w-6 h-6 bg-teal-200 rounded" />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="h-5 w-32 bg-teal-200 rounded" />
+                                                            <div className="h-5 w-12 bg-teal-200 rounded-full" />
+                                                        </div>
+                                                        <div className="h-5 w-40 bg-teal-200 rounded mb-2" />
+                                                        <div className="h-4 w-48 bg-teal-100 rounded mb-2" />
+                                                        <div className="h-4 w-56 bg-teal-100 rounded" />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl hover:bg-teal-100/60 transition w-full">
+                                                    <div className="text-2xl mt-1">
+                                                        <FontAwesomeIcon
+                                                            className="text-teal-600"
+                                                            icon={faHouseCircleCheck}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-lg font-medium text-slate-900">
+                                                                Accommodation
+                                                            </span>
+                                                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-200 text-teal-900">
+                                                                {((budget.accommodationCost / budget.totalCost) * 100).toFixed(0)}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-sm font-semibold text-slate-800 mt-1">
+                                                            ₹{budget.accommodationCost.toLocaleString()}
+                                                        </div>
+                                                        <div className="text-xs font-bold text-slate-600 mt-1">
+                                                            <span className="capitalize">{tripDetails.accommodation} </span>· {tripDetails.accommodation == "hostel" ? tripDetails.travelers + " beds" : Math.ceil(tripDetails.travelers / 2) + " rooms"} · {tripDetails.duration} nights
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 mt-1">
+                                                            {tripDetails.accommodation == "hostel" ? `≈ ₹${Math.round(budget.accommodationCost / (tripDetails.travelers * tripDetails.duration)).toLocaleString()} per bed / night` : `≈ ₹${Math.round(budget.accommodationCost / (Math.ceil(tripDetails.travelers / 2) * tripDetails.duration)).toLocaleString()} per room / night`}
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                            <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl hover:bg-teal-100/60 transition w-full">
+                                                <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl hover:bg-teal-100/60 transition w-full">
+                                                    <div className="text-2xl mt-1">
+                                                        <FontAwesomeIcon className="text-teal-600" icon={faCar} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-lg font-medium text-slate-900">
+                                                                Transportation
+                                                            </span>
+                                                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-200 text-teal-900">
+                                                                {((budget.transportationCost / budget.totalCost) * 100).toFixed(0)}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-sm font-semibold text-slate-800 mt-1">
+                                                            ₹{budget.transportationCost.toLocaleString()}
+                                                        </div>
+                                                        <div className="text-xs font-bold text-slate-600 mt-1">
+                                                            <span className="capitalize">{tripDetails.transportation} </span>· {(itineary.reduce(
+                                                                (sum, day) => sum + (day.summary?.distance || 0),
+                                                                0
+                                                            ) / 1000).toFixed(0)} km
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 mt-1">
+                                                            {
+                                                                tripDetails.transportation == "car" ? (
+                                                                    <>
+                                                                        <p>Car's mileage (default i.e. 15) : </p>
+                                                                        <input type="number" className="w-12 px-2 py-1 mt-1 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-teal-300" value={carMileage} onChange={(e) => setCarMileage(e.target.value)} />
+                                                                    </>
+                                                                ) : tripDetails.transportation == "bike" ? (
+                                                                    <>
+                                                                        <p>Bike's mileage (default i.e. 30) : </p>
+                                                                        <input type="number" className="w-12 px-2 py-1 mt-1 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-teal-300" value={bikeMileage} onChange={(e) => setBikeMileage(e.target.value)} />
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <p>Round Trip cost : {budget.transportationCost.toLocaleString()}</p>
+                                                                        <p>One Way cost : {(budget.transportationCost / 2).toLocaleString()}</p>
+                                                                    </>
+                                                                )
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                <div className="text-2xl mt-1">
-                                    <FontAwesomeIcon
-                                        className="text-teal-600"
-                                        icon={faUtensils}
-                                    />
+                                                <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl hover:bg-teal-100/60 transition w-full">
+                                                    <div className="text-2xl mt-1">
+                                                        <FontAwesomeIcon
+                                                            className="text-teal-600"
+                                                            icon={faUtensils}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-lg font-medium text-slate-900">
+                                                                Meals
+                                                            </span>
+                                                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-200 text-teal-900">
+                                                                {((budget.mealCost / budget.totalCost) * 100).toFixed(0)}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-sm font-semibold text-slate-800 mt-1">
+                                                            ₹{budget.mealCost.toLocaleString()}
+                                                        </div>
+                                                        <div className="text-xs font-bold text-slate-600 mt-1">
+                                                            <span className="capitalize">{tripDetails.mealPreference} </span> · {tripDetails.duration} days · {tripDetails.travelers} people
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 mt-1">
+                                                            ≈ ₹{Math.round(
+                                                                budget.mealCost /
+                                                                (tripDetails.duration * tripDetails.travelers)
+                                                            ).toLocaleString()} per person / day
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl hover:bg-teal-100/60 transition w-full">
+                                                    <div className="text-2xl mt-1">
+                                                        <FontAwesomeIcon
+                                                            className="text-teal-600"
+                                                            icon={faEllipsisH}
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-lg font-medium text-slate-900">
+                                                                Miscellaneous
+                                                            </span>
+                                                            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-200 text-teal-900">
+                                                                {((budget.miscCost / budget.totalCost) * 100).toFixed(0)}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-sm font-semibold text-slate-800 mt-1">
+                                                            ₹{budget.miscCost.toLocaleString()}
+                                                        </div>
+                                                        <div className="text-xs font-bold text-slate-600 mt-1">
+                                                            Tickets · Dailt Essentials · Tips
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 mt-1">
+                                                            ≈ ₹{Math.round(
+                                                                budget.miscCost /
+                                                                (tripDetails.duration * tripDetails.travelers)
+                                                            ).toLocaleString()} per person / day
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
-
-                                <div className="flex-1">
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-lg font-medium text-slate-900">
-                                            Meals
-                                        </span>
-
-                                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-200 text-teal-900">
-                                            {((budget.mealCost / budget.totalCost) * 100).toFixed(0)}%
-                                        </span>
-                                    </div>
-
-                                    <div className="text-sm font-semibold text-slate-800 mt-1">
-                                        ₹{budget.mealCost.toLocaleString()}
-                                    </div>
-
-                                    <div className="text-xs font-bold text-slate-600 mt-1">
-                                        <span className="capitalize">{tripDetails.mealPreference} </span> · {tripDetails.duration} days · {tripDetails.travelers} people
-                                    </div>
-
-                                    <div className="text-xs text-slate-500 mt-1">
-                                        ≈ ₹{Math.round(
-                                            budget.mealCost /
-                                            (tripDetails.duration * tripDetails.travelers)
-                                        ).toLocaleString()} per person / day
-                                    </div>
-
-                                </div>
-                            </div>
-
-
-
-                            <div className="flex items-start gap-4 px-5 py-4 bg-teal-50 border border-teal-100 rounded-2xl hover:bg-teal-100/60 transition w-full">
-
-                                <div className="text-2xl mt-1">
-                                    <FontAwesomeIcon
-                                        className="text-teal-600"
-                                        icon={faEllipsisH}
-                                    />
-                                </div>
-
-                                <div className="flex-1">
-
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-lg font-medium text-slate-900">
-                                            Miscellaneous
-                                        </span>
-
-                                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-teal-200 text-teal-900">
-                                            {((budget.miscCost / budget.totalCost) * 100).toFixed(0)}%
-                                        </span>
-                                    </div>
-
-                                    <div className="text-sm font-semibold text-slate-800 mt-1">
-                                        ₹{budget.miscCost.toLocaleString()}
-                                    </div>
-
-                                    <div className="text-xs font-bold text-slate-600 mt-1">
-                                        Tickets · Dailt Essentials · Tips
-                                    </div>
-
-                                    <div className="text-xs text-slate-500 mt-1">
-                                        ≈ ₹{Math.round(
-                                            budget.miscCost /
-                                            (tripDetails.duration * tripDetails.travelers)
-                                        ).toLocaleString()} per person / day
-                                    </div>
-
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                )
-            }
-            </>
+                            )
+                        }
+                    </>
                 ) : (<>
                     <div className="flex flex-col items-center justify-center h-full text-center px-6 mt-48">
 
