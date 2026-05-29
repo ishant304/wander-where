@@ -7,14 +7,13 @@ import DaysColumn from "./DaysColumn";
 import SortableStops from "./SortableStops";
 import { arrayMove } from "@dnd-kit/sortable";
 
-function StopsTab({ tripDetails, setTripDetails, suggestedPlaces, setSuggestedPlaces, locations, setLocations, routeModel, setRouteModel }) {
+function StopsTab({ tripDetails, setTripDetails, suggestedPlaces, setSuggestedPlaces, locations, setLocations, routeModel, setRouteModel, isMountedRef, suggestionError, setSuggestionError}) {
 
   const [activeId, setActiveId] = useState(null)
   const [searchInput, setSearchInput] = useState("")
   const [searchSuggestion, setSearchSuggestion] = useState()
   const [loadingSuggestedPlaces, setLoadingSuggestedPlaces] = useState(false)
-  const [suggestionError, setSuggestionError] = useState(false)
-  const retrySuggestionRef = useRef(0)
+
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -24,10 +23,10 @@ function StopsTab({ tripDetails, setTripDetails, suggestedPlaces, setSuggestedPl
       return;
     }
 
-    const rawData = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(value + ",india")}&key=0b37e65606bf435f95a9915069d9e07f`)
+    const apiKey = import.meta.env.VITE_OPENCAGE_API_KEY;
+    const rawData = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(value + ",india")}&key=${apiKey}`)
     const data = await rawData.json()
 
-    console.log(data)
 
     setSearchSuggestion(data)
 
@@ -137,66 +136,60 @@ function StopsTab({ tripDetails, setTripDetails, suggestedPlaces, setSuggestedPl
 
   }, [])
 
-  useEffect(() => {
+  const fetchPlacesNearDestination = async () => {
 
-    if (!locations || locations.length === 0 || suggestedPlaces.length > 0) return;
+    setLoadingSuggestedPlaces(true);
+    setSuggestionError(false);
 
-    const fetchPlacesNearDestination = async () => {
+    try {
 
-      setLoadingSuggestedPlaces(true);
-      setSuggestionError(false);
+      const dest = locations.find(loc => loc.id == "end")
+      const lat = dest.coords[0]
+      const lng = dest.coords[1]
 
-      try {
-
-        const dest = locations.find(loc => loc.id == "end")
-        const lat = dest.coords[0]
-        const lng = dest.coords[1]
-
-        const query = `[out:json];
+      const query = `[out:json];
 (
   node["place"="city"]["population"](around:70000,${lat},${lng});
   node["place"="town"]["population"](around:70000,${lat},${lng});
 );
 out body;`
 
-        let rawData = await fetch("https://overpass-api.de/api/interpreter", {
-          method: "post",
-          headers: { "Content-Type": "text/plain" },
-          body: query
-        })
+      let rawData = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "post",
+        headers: { "Content-Type": "text/plain" },
+        body: query
+      })
 
-        if (!rawData.ok) {
-          throw new Error("API_failed")
-        }
-
-        let data = await rawData.json()
-
-        let tempPlaces = data.elements
-
-        tempPlaces = tempPlaces.filter(place => Number(place.tags.population) % 1000 != 0)
-
-        tempPlaces = tempPlaces.slice(0, 6)
-
-        console.log(tempPlaces)
-
-        setSuggestedPlaces(tempPlaces)
-        setLoadingSuggestedPlaces(false)
-
-      }
-      catch (err) {
-        if (retrySuggestionRef.current < 5) {
-          retrySuggestionRef.current += 1
-          return fetchPlacesNearDestination()
-        }
-        else {
-          setSuggestionError(true)
-          setLoadingSuggestedPlaces(false)
-        }
+      if (!rawData.ok) {
+        throw new Error("API_failed")
       }
 
+      let data = await rawData.json()
 
+      let tempPlaces = data.elements
+
+      tempPlaces = tempPlaces.filter(place => Number(place.tags.population) % 1000 != 0)
+
+      tempPlaces = tempPlaces.slice(0, 6)
+
+
+      setSuggestedPlaces(tempPlaces)
+      setLoadingSuggestedPlaces(false)
 
     }
+    catch (err) {
+      setSuggestionError(true)
+      setLoadingSuggestedPlaces(false)
+    }
+    finally {
+      isMountedRef.current = true;
+    }
+
+  }
+
+  useEffect(() => {
+
+    if (!locations || locations.length === 0 || suggestedPlaces.length > 0 || isMountedRef.current === true) return;
 
     fetchPlacesNearDestination();
 
@@ -239,7 +232,7 @@ out body;`
             <div>
               <p className="text-base mb-2 mt-6 text-gray-700">Place to visit near Destination</p>
               <div className={`flex flex-row gap-4 pb-4 whitespace-nowrap ${loadingSuggestedPlaces ? "overflow-hidden" : "overflow-x-auto"} `}>
-                {!loadingSuggestedPlaces && suggestedPlaces && suggestedPlaces.filter(item=>item?.tags.name!==tripDetails.endLocation).length > 0 ? (
+                {!loadingSuggestedPlaces && suggestedPlaces && suggestedPlaces.filter(item => item?.tags.name !== tripDetails.endLocation).length > 0 ? (
                   suggestedPlaces.map((place) =>
 
                     place.tags.name != tripDetails.endLocation && (
@@ -277,7 +270,7 @@ out body;`
                 ) : suggestionError ? (
                   <>
                     <div className="w-full flex flex-col items-center justify-center py-8 text-center">
-                      <FontAwesomeIcon icon={faTriangleExclamation} className="text-3xl text-gray-400 mb-2"/>
+                      <FontAwesomeIcon icon={faTriangleExclamation} className="text-3xl text-gray-400 mb-2" />
 
                       <p className="text-sm font-medium text-gray-700">
                         Unable to load nearby places
@@ -286,6 +279,9 @@ out body;`
                       <p className="text-xs text-gray-500 mt-1 max-w-xs">
                         The server is not responding right now. <br /> Please try again in a moment.
                       </p>
+                      <button className="" onClick={fetchPlacesNearDestination}>
+                        retry
+                      </button>
                     </div>
                   </>
                 ) : (
@@ -315,27 +311,27 @@ out body;`
 
             <h1 className="mt-10 text-2xl font-bold text-gray-800 mb-2 ">Reorder you stops</h1>
             <p className="text-xs text-gray-500 mb-8">Drag stops to reorder your list</p>
-            <div className="touch-none">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={(event) => { setActiveId(null); handleDragEnd(event) }}
-              onDragStart={(event) => setActiveId(event.active.id)}
-              onDragCancel={() => setActiveId(null)}
-            >
-              {
-                Array.from({ length: tripDetails.duration }).map((_, index) => (
-                  <DaysColumn locations={locations} setLocations={setLocations} key={index} index={index} activeId={activeId} />
-                ))
-              }
-              <DragOverlay>
+            <div>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => { setActiveId(null); handleDragEnd(event) }}
+                onDragStart={(event) => setActiveId(event.active.id)}
+                onDragCancel={() => setActiveId(null)}
+              >
                 {
-                  activeId ? (
-                    <SortableStops item={locations.find(item => item.id === activeId)} isOverlay />
-                  ) : null
+                  Array.from({ length: tripDetails.duration }).map((_, index) => (
+                    <DaysColumn locations={locations} setLocations={setLocations} key={index} index={index} activeId={activeId} />
+                  ))
                 }
-              </DragOverlay>
-            </DndContext>
+                <DragOverlay>
+                  {
+                    activeId ? (
+                      <SortableStops item={locations.find(item => item.id === activeId)} isOverlay />
+                    ) : null
+                  }
+                </DragOverlay>
+              </DndContext>
             </div>
             <div>
               <button className="w-full h-12 bg-gradient-to-r from-[rgb(94,221,189)]  to-[rgb(27,193,199)] rounded-full mt-8 mb-4" onClick={handleGenerateRoute}>

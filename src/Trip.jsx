@@ -40,11 +40,13 @@ function Trip() {
   const [departureLoadingError, setDepartureLoadingError] = useState(false)
   const [destinationLoadingSearch, setDestinationLoadingSearch] = useState(false)
   const [destinationLoadingError, setDestinationLoadingError] = useState(false)
+  const [suggestionError, setSuggestionError] = useState(false)
   const startFirstRender = useRef(true);
   const endFirstRender = useRef(true);
   const firstRender = useRef(false);
   const destInputFirstChange = useRef(false);
   const routeCache = useRef("");
+  const isMountedRef = useRef(false)
 
 
   function handleDepartureInput(e) {
@@ -188,6 +190,9 @@ function Trip() {
       setDepartureInput("");
       setTripDetails(prev => ({ ...prev, startLocation: "" }));
       setLocations(prev => prev.filter(loc => loc.id !== "start"));
+      setRoute(null);
+      setRouteModel("initial");
+      setPolylineCoords([]);
       return;
     }
 
@@ -205,6 +210,9 @@ function Trip() {
       return;
     }
 
+    setRoute(null);
+    setRouteModel("initial");
+    setPolylineCoords([]);
     setCheckbox(true);
     setDepartureInput("Current location");
     setTripDetails(prev => ({ ...prev, startLocation: "Current location" }));
@@ -276,6 +284,10 @@ function Trip() {
     }
 
     if (tripDetails.startLocation === "" || checkbox) return;
+
+    setRoute(null);
+    setRouteModel("initial");
+    setPolylineCoords([]);
 
     async function updateGeocoding() {
       const coords = await geocoding(tripDetails.startLocation)
@@ -723,6 +735,7 @@ function Trip() {
                                 setDestError(false);
                                 firstRender.current = true;
                                 setSuggestedPlaces([]);
+                                isMountedRef.current = false;
                                 setRouteModel("initial");
                               }}
                               className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex flex-col"
@@ -949,6 +962,9 @@ function Trip() {
               suggestedPlaces={suggestedPlaces} setSuggestedPlaces={setSuggestedPlaces}
               routeModel={routeModel}
               setRouteModel={setRouteModel}
+              isMountedRef = {isMountedRef}
+              suggestionError={suggestionError}
+              setSuggestionError={setSuggestionError}
             />
           )}
           {activeTab == "itineary" && (

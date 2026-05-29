@@ -106,7 +106,8 @@ function Landing() {
             <Typewriter />
           </div>
           <div className="text-center my-12 max-w-[700px]">
-            From the snowy Himalayas to the beaches of Goa. WanderWhere brings every destination closer. Discover, plan, and customize your perfect itinerary in minutes, all designed with Indian travelers in mind.
+            <div>From the snowy Himalayas to Goa’s beaches, WanderWhere helps you discover destinations, build personalized itineraries, and plan trips in minutes</div>
+            <div className="text-teal-600 pt-2">Built for Indian travelers</div>
           </div>
           <div className="w-full flex flex-col items-center justify-center sm:flex-row gap-4 min-w-[300px] max-w-[500px]">
             <div className="w-full flex-1 relative sm:w-1/2">
@@ -124,7 +125,7 @@ function Landing() {
                 peer-focus:-translate-y-3 peer-focus:scale-[0.8] peer-focus:-translate-x-7`}>
                 Where are you planning to go?
               </label>
-              {input.length > 0 && (
+              {input.trim().length > 0 && !selectedPlace && (
                 <ul className="absolute z-50 w-full mt-[2px] bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
 
                   {loadingSearch && (
