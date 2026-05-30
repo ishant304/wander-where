@@ -187,7 +187,7 @@ function Landing() {
             Enter a valid place</div>
           <div className="flex flex-row gap-2 mt-6">
             <p>Not sure where to go?</p>
-            <Link to='/exploremap' className="text-teal-600">Explore the map
+            <Link to='/explore' className="text-teal-600">Explore the map
               <FontAwesomeIcon className="ml-1" icon={faArrowRight} />
             </Link>
 

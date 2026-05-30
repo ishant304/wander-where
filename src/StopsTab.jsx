@@ -34,7 +34,15 @@ function StopsTab({ tripDetails, setTripDetails, suggestedPlaces, setSuggestedPl
 
   }
 
+  function canAddStop() {
+    return tripDetails.startLocation !== "" && tripDetails.endLocation !== "";
+  }
+
   function handleClick(data) {
+    if (!canAddStop()) {
+      alert("Please add starting and ending location before adding stops.");
+      return;
+    }
 
     setRouteModel("editing")
 
@@ -48,6 +56,10 @@ function StopsTab({ tripDetails, setTripDetails, suggestedPlaces, setSuggestedPl
   }
 
   function handleSearchClick() {
+    if (!canAddStop()) {
+      alert("Please add starting and ending location before adding stops.");
+      return;
+    }
 
     setRouteModel("editing")
 
@@ -279,8 +291,11 @@ out body;`
                       <p className="text-xs text-gray-500 mt-1 max-w-xs">
                         The server is not responding right now. <br /> Please try again in a moment.
                       </p>
-                      <button className="" onClick={fetchPlacesNearDestination}>
-                        retry
+                      <button
+                        className="mt-4 inline-flex items-center justify-center rounded-full bg-teal-500 px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-300"
+                        onClick={fetchPlacesNearDestination}
+                      >
+                        Retry
                       </button>
                     </div>
                   </>

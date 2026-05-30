@@ -565,7 +565,7 @@ function Trip() {
             <span className="text-xs mt-1">Itineary</span>
           </button>
         </div>
-        <div className="w-full sm:w-3/12 h-full border border-r-teal-200 overflow-y-auto">
+        <div className="w-full xl:w-1/4 lg:w-1/3 md:w-2/5 sm:w-1/2 h-full border border-r-teal-200 overflow-y-auto">
 
 
           {activeTab == "overview" && (
@@ -973,7 +973,7 @@ function Trip() {
             </div>
           )}
         </div>
-        <div className="w-3/4 h-full hidden sm:block">
+        <div className="sm:w-1/2 md:w-3/5 xl:w-3/4 lg:w-2/3 h-full hidden sm:block">
           <Map locations={locations} polylineCoords={polylineCoords} />
         </div>
       </div>
