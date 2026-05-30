@@ -1,4 +1,5 @@
 import { Outlet, Route, Routes } from "react-router"
+import { Analytics } from "@vercel/analytics/react"
 import Header from "./Header"
 import Landing from "./Landing"
 import Trip from "./Trip"
@@ -16,6 +17,7 @@ function App() {
         <Route path="/features" element={<Features/>} />
       </Routes>
       <Outlet/>
+      <Analytics />
     </>
   )
 }
