@@ -22,8 +22,14 @@ function Header() {
     <>
       <div className='bg-teal-100 flex py-5 justify-between px-7 xl:px-28 lg:px-20 z-50 border-b-teal-500 border-b shadow-lg'>
         <div className='flex items-center'>
-          <img src={logo} alt="" className='h-16 sm:h-20' />
-          <h2 className='text-4xl hidden sm:block'>WanderWhere</h2>
+          <button
+            onClick={() => navigate('/')}
+            className='flex items-center gap-3 bg-transparent border-0 p-0 focus:outline-none'
+            aria-label='Go to home'
+          >
+            <img src={logo} alt="WanderWhere logo" className='h-16 sm:h-20' />
+            <h2 className='text-4xl hidden sm:block select-none'>WanderWhere</h2>
+          </button>
         </div>
         <div className='flex items-center gap-4 justify-center text-lg sm:gap-10'>
           <NavLink to='/' className='hidden lg:block'>Home</NavLink>
@@ -35,7 +41,7 @@ function Header() {
           </button>
         </div>
       </div>
-      <div className={`fixed flex flex-col items-center justify-center z-10 gap-12 top-0 right-0 h-screen w-1/2 bg-teal-100 shadow-xl transition-transform duration-300 border-l-teal-500 border-l ${ham ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed flex flex-col items-center justify-center z-[15] gap-12 top-0 right-0 h-screen w-1/2 bg-teal-100 shadow-xl transition-transform duration-300 border-l-teal-500 border-l ${ham ? "translate-x-0" : "translate-x-full"}`}>
         <NavLink to='/'>Home</NavLink>
         <NavLink to='/explore'>Explore</NavLink>
         <NavLink to='/features'>Features</NavLink>
