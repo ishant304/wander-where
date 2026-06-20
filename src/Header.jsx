@@ -35,7 +35,7 @@ function Header() {
           <NavLink to='/' className='hidden lg:block'>Home</NavLink>
           <NavLink to='/explore' className='hidden lg:block'>Explore</NavLink>
           <NavLink to='/features' className='hidden lg:block'>Features</NavLink>
-          <button onClick={() => navigate('/planyourtrip')} className={`whitespace-nowrap rounded-full px-4 py-2 bg-gradient-to-r from-[rgb(94,221,189)]  to-[rgb(27,193,199)] ${ham ? "hidden" : "black"} `}>Plan your trip</button>
+          <button onClick={() => navigate('/planyourtrip')} className={`whitespace-nowrap rounded-full px-4 py-2 bg-gradient-to-r from-[rgb(94,221,189)]  to-[rgb(27,193,199)] ${ham ? "hidden" : "block"} `}>Plan your trip</button>
           <button className={`text-xl lg:hidden z-20`} onClick={handleHam}>
             <FontAwesomeIcon icon={faBars} />
           </button>
